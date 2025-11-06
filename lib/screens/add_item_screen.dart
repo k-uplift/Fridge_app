@@ -1,5 +1,3 @@
-// lib/screens/add_item_screen.dart
-
 import 'package:flutter/material.dart';
 import '../models/food_item.dart';
 import 'package:intl/intl.dart';
@@ -18,18 +16,12 @@ class AddItemScreen extends StatefulWidget {
 
 class _AddItemScreenState extends State<AddItemScreen> {
   final _formKey = GlobalKey<FormState>();
-
-  // 폼 필드 변수
   String _name = '';
-  // --- 1. (수정) _quantity의 기본값을 null로 변경 ---
   double? _quantity;
-  // ------------------------------------------
   String _unit = '개';
   FoodCategory? _selectedCategory;
-  StorageLocation? _selectedStorage;
-  // (유통기한은 새 항목일 때 기본값을 주는 것이 편하므로 유지)
+  StorageLocation? _selectedStorage
   DateTime _expiryDate = DateTime.now().add(const Duration(days: 7));
-  
   bool get _isEditing => widget.existingItem != null;
 
   @override
@@ -38,7 +30,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
     if (_isEditing) {
       final item = widget.existingItem!;
       _name = item.name;
-      _quantity = item.quantity; // 수정 모드에서는 값이 채워짐
+      _quantity = item.quantity;
       _unit = item.unit;
       _selectedCategory = item.category;
       _selectedStorage = item.storageLocation;
@@ -46,7 +38,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
     }
   }
 
-  // ( ... 한글 변환 헬퍼 함수들은 이전과 동일 ... )
   String _getCategoryKoreanName(FoodCategory category) {
     switch (category) {
       case FoodCategory.dairy: return '유제품';
@@ -67,7 +58,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
     }
   }
 
-  // ( ... 날짜 선택 함수는 이전과 동일 ... )
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -82,7 +72,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
     }
   }
 
-  // ( ... 폼 제출 함수는 이전과 동일 ... )
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
@@ -102,7 +91,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
         resultItem = FoodItem(
           id: DateTime.now().toString(),
           name: _name,
-          quantity: _quantity!, // validator가 통과했으므로 null이 아님
+          quantity: _quantity!,
           unit: _unit,
           category: _selectedCategory!,
           storageLocation: _selectedStorage!,
@@ -126,7 +115,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // 1. 음식 이름
               TextFormField(
                 initialValue: _name, 
                 decoration: const InputDecoration(labelText: '음식 이름'),
@@ -142,7 +130,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
               ),
               const SizedBox(height: 16),
 
-              // 2. 분류 (Dropdown)
               DropdownButtonFormField<FoodCategory>(
                 decoration: const InputDecoration(labelText: '분류'),
                 value: _selectedCategory, 
@@ -161,7 +148,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
               ),
               const SizedBox(height: 16),
 
-              // 3. 보관 방법 (Dropdown)
               DropdownButtonFormField<StorageLocation>(
                 decoration: const InputDecoration(labelText: '보관 방법'),
                 value: _selectedStorage, 
@@ -180,16 +166,13 @@ class _AddItemScreenState extends State<AddItemScreen> {
               ),
               const SizedBox(height: 16),
 
-              // 4. 수량
               TextFormField(
                 decoration: const InputDecoration(labelText: '수량'),
-                // --- 2. (수정) initialValue를 빈 칸으로 ---
                 initialValue: _quantity?.toString() ?? '', 
-                // -----------------------------------
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return '수량을 입력하세요.'; // (수정) 빈 칸일 때의 validator 추가
+                    return '수량을 입력하세요.';
                   }
                   if (double.tryParse(value) == null || double.parse(value) <= 0) {
                     return '유효한 수량을 입력하세요.';
@@ -202,7 +185,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
               ),
               const SizedBox(height: 16),
 
-              // 5. 유통기한 (DatePicker)
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -215,7 +197,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
               ),
               const SizedBox(height: 32),
 
-              // 6. 등록/취소 버튼
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
