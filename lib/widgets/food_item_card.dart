@@ -42,6 +42,7 @@ class FoodItemCard extends StatelessWidget {
       label = '$difference일 남음';
       chipColor = Colors.green.shade400;
     }
+    
     return Chip(
       label: Text(label, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
       backgroundColor: chipColor,
