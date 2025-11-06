@@ -1,11 +1,11 @@
-// 보관 위치 (냉장, 냉동, 상온)
+// 보관 위치
 enum StorageLocation {
   refrigerated,
   frozen,
   roomTemperature,
 }
 
-// 식재료 분류 (유제품, 육류 등)
+// 식재료 분류
 enum FoodCategory {
   dairy,
   meat,
@@ -38,7 +38,6 @@ class FoodItem {
     required this.expiryDate,
   });
 
-  // 객체 복사를 위한 copyWith 메서드(수량 변경 외에 다른 속성도 바꿀 수 있도록 확장 가능)
   FoodItem copyWith({
     String? id,
     String? name,

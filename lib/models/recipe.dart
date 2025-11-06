@@ -19,7 +19,6 @@ class Recipe {
 }
 
 // 임시 레시피 데이터
-
 final List<Recipe> MOCK_RECIPES = [
   Recipe(
     id: 'r1',
