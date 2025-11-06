@@ -25,6 +25,7 @@ class FoodItemCard extends StatelessWidget {
     final difference = expiryDay.difference(today).inDays;
     String label;
     Color chipColor;
+    
     if (difference < 0) {
       label = '${difference.abs()}일 지남';
       chipColor = Colors.red.shade700;
@@ -41,6 +42,7 @@ class FoodItemCard extends StatelessWidget {
       label = '$difference일 남음';
       chipColor = Colors.green.shade400;
     }
+    
     return Chip(
       label: Text(label, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
       backgroundColor: chipColor,
