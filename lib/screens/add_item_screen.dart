@@ -1,5 +1,3 @@
-// lib/screens/add_item_screen.dart
-
 import 'package:flutter/material.dart';
 import '../models/food_item.dart';
 import 'package:intl/intl.dart';
@@ -19,9 +17,8 @@ class AddItemScreen extends StatefulWidget {
 class _AddItemScreenState extends State<AddItemScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  // 폼 필드 변수
   String _name = '';
-  double? _quantity; // 기본값 null로 설정 (빈 칸)
+  double? _quantity;
   String _unit = '개';
   FoodCategory? _selectedCategory;
   StorageLocation? _selectedStorage;
@@ -32,7 +29,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
   @override
   void initState() {
     super.initState();
-    // 수정 모드일 때만 폼 변수들을 기존 값으로 채움
     if (_isEditing) {
       final item = widget.existingItem!;
       _name = item.name;
@@ -44,7 +40,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
     }
   }
 
-  // ( ... 한글 변환 헬퍼 함수들 ... )
   String _getCategoryKoreanName(FoodCategory category) {
     switch (category) {
       case FoodCategory.dairy:
@@ -77,7 +72,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
     }
   }
 
-  // ( ... 날짜 선택 함수 ... )
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -92,7 +86,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
     }
   }
 
-  // ( ... 폼 제출 함수 ... )
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
@@ -112,7 +105,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
         resultItem = FoodItem(
           id: DateTime.now().toString(),
           name: _name,
-          quantity: _quantity!, // validator가 통과했으므로 null이 아님
+          quantity: _quantity!,
           unit: _unit,
           category: _selectedCategory!,
           storageLocation: _selectedStorage!,
@@ -136,7 +129,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // 1. 음식 이름
               TextFormField(
                 initialValue: _name,
                 decoration: const InputDecoration(labelText: '음식 이름'),
@@ -152,7 +144,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
               ),
               const SizedBox(height: 16),
 
-              // 2. 분류 (Dropdown)
               DropdownButtonFormField<FoodCategory>(
                 decoration: const InputDecoration(labelText: '분류'),
                 value: _selectedCategory,
@@ -171,7 +162,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
               ),
               const SizedBox(height: 16),
 
-              // 3. 보관 방법 (Dropdown)
               DropdownButtonFormField<StorageLocation>(
                 decoration: const InputDecoration(labelText: '보관 방법'),
                 value: _selectedStorage,
@@ -190,7 +180,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
               ),
               const SizedBox(height: 16),
 
-              // 4. 수량
               TextFormField(
                 decoration: const InputDecoration(labelText: '수량'),
                 initialValue: _quantity?.toString() ?? '',
@@ -211,7 +200,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
               ),
               const SizedBox(height: 16),
 
-              // 5. 유통기한 (DatePicker)
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -224,7 +212,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
               ),
               const SizedBox(height: 32),
 
-              // 6. 등록/취소 버튼
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
