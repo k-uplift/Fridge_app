@@ -38,7 +38,6 @@ class FoodItem {
     required this.expiryDate,
   });
 
-  // 객체 복사를 위한 copyWith 메서드(수량 변경 외에 다른 속성도 바꿀 수 있도록 확장 가능)
   FoodItem copyWith({
     String? id,
     String? name,
