@@ -3,9 +3,7 @@ import '../models/food_item.dart';
 
 class ExpiryBanner extends StatelessWidget {
   static const int warningDays = 3;
-
   final List<FoodItem> items;
-
   const ExpiryBanner({super.key, required this.items});
 
   List<FoodItem> _getExpiringItems() {
@@ -47,7 +45,7 @@ class ExpiryBanner extends StatelessWidget {
       child: Row(
         children: [
           Icon(Icons.warning_amber_rounded, color: Colors.amber[800]),
-          // ---------------------------
+
           const SizedBox(width: 12),
           Expanded(
             child: Text(
