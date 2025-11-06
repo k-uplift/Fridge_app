@@ -19,7 +19,6 @@ class Recipe {
 }
 
 // 임시 레시피 데이터
-
 final List<Recipe> MOCK_RECIPES = [
   Recipe(
     id: 'r1',
@@ -42,6 +41,7 @@ final List<Recipe> MOCK_RECIPES = [
       '설탕이나 시럽을 뿌려 완성합니다.',
     ],
   ),
+  
   Recipe(
     id: 'r2',
     name: '크림 스프',
@@ -65,6 +65,7 @@ final List<Recipe> MOCK_RECIPES = [
       '우유를 붓고 약한 불에서 끓이다가 소금, 후추로 간을 맞춘다.',
     ],
   ),
+  
   Recipe(
     id: 'r3',
     name: '계란말이',
