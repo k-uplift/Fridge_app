@@ -23,7 +23,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
   FoodCategory? _selectedCategory;
   StorageLocation? _selectedStorage;
   DateTime _expiryDate = DateTime.now().add(const Duration(days: 7));
-
   bool get _isEditing => widget.existingItem != null;
 
   @override
@@ -182,7 +181,11 @@ class _AddItemScreenState extends State<AddItemScreen> {
 
               TextFormField(
                 decoration: const InputDecoration(labelText: '수량'),
-                initialValue: _quantity?.toString() ?? '',
+                initialValue: (_quantity == null)
+                    ? ''
+                    : ((_quantity! % 1 == 0)
+                        ? _quantity!.toInt().toString()
+                        : _quantity!.toString()),
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
