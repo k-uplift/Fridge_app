@@ -1,5 +1,4 @@
 # filepath: .gitignore
-# app_venv/는 가상환경 디렉토리를 무시하기 위함
 app_venv/
 __pycache__/
 *.db
