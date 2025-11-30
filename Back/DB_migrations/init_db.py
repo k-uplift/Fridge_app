@@ -9,7 +9,7 @@ c.execute('PRAGMA foreign_keys = ON;')
 
 # category 테이블 생성
 c.execute('''
-    CREATE TABLE IF NOT EXISTS category (
+    CREATE TABLE IF NOT EXISTS CATEGORY (
         category_id INTEGER PRIMARY KEY,
         category_name TEXT NOT NULL UNIQUE,
         is_cook BOOLEAN NOT NULL DEFAULT 0,
@@ -18,7 +18,7 @@ c.execute('''
 ''')
 
 c.execute('''
-    CREATE TABLE IF NOT EXISTS storage_location (
+    CREATE TABLE IF NOT EXISTS STORAGE_LOCATION (
         location_id INTEGER PRIMARY KEY,
         location_name VARCHAR(50) NOT NULL,
         description VARCHAR(255)
