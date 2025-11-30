@@ -2,7 +2,7 @@
 # database.py를 사용하여 DB에 접근하고, 유통기한을 자동 계산 및 DB 등록
 
 from datetime import datetime, timedelta
-from database import get_db_connection
+from ..db.database import get_db_connection
 from typing import Optional, Any, Dict
 
 # 분류 태그 및 보관 위치를 기반으로 유통기한 만료 날짜를 계산
