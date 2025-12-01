@@ -97,9 +97,9 @@ def extract_receipt_data(image_array):
 
 if __name__ == '__main__':
     # 입력 파일 경로
-    base_path = os.path.dirname(os.path.abspath(__file__))
-    file_path = os.path.join(base_path, 'test_image.jpg')
-    output_json_path = os.path.join(base_path, 'receipt_data.json')
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(current_dir, 'test_image.jpg')
+    output_json_path = os.path.join(current_dir, 'receipt_data.json')
     
     processed_img = preprocess_image(file_path)
     
