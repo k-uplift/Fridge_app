@@ -1,18 +1,24 @@
+# app/ocr/processor.py
+
 import cv2
 import numpy as np
 import easyocr
 import re
 import os
-import json
 
 def preprocess_image(image_path):
+    """
+    이미지 경로를 받아 전처리(그레이스케일, 이진화 등)된 OpenCV 이미지 객체를 반환
+    """
     if not os.path.exists(image_path):
         return None
 
+    # 한글 경로 등 파일 읽기 문제 방지를 위한 np.fromfile 사용
     img_array = np.fromfile(image_path, np.uint8)
     img = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     
+    # 이미지 확대 (OCR 인식률 향상)
     scaled = cv2.resize(gray, None, fx=2.0, fy=2.0, interpolation=cv2.INTER_CUBIC)
     
     kernel = np.ones((3, 3), np.uint8)
@@ -27,6 +33,9 @@ def preprocess_image(image_path):
     return binary
 
 def is_valid_korean_product(text):
+    """
+    추출된 텍스트가 유효한 상품명인지 검증
+    """
     pure_text = re.sub(r'[^가-힣a-zA-Z0-9]', '', text)
     
     if len(pure_text) < 2:
@@ -40,12 +49,16 @@ def is_valid_korean_product(text):
         return False
 
     digit_count = len(re.sub(r'[^0-9]', '', pure_text))
-    if (digit_count / len(pure_text)) >= 0.8:
+    if len(pure_text) > 0 and (digit_count / len(pure_text)) >= 0.8:
         return False
 
     return True
 
 def extract_receipt_data(image_array):
+    """
+    전처리된 이미지(numpy array)를 받아 EasyOCR로 텍스트 추출 및 파싱
+    """
+    # GPU 사용 가능시 gpu=True로 변경 권장
     reader = easyocr.Reader(['ko', 'en'], gpu=False) 
     results = reader.readtext(image_array)
     
@@ -94,23 +107,3 @@ def extract_receipt_data(image_array):
         i += 1
 
     return parsed_data
-
-if __name__ == '__main__':
-    # 입력 파일 경로
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    file_path = os.path.join(current_dir, 'test_image.jpg')
-    output_json_path = os.path.join(current_dir, 'receipt_data.json')
-    
-    processed_img = preprocess_image(file_path)
-    
-    if processed_img is not None:
-        print("이미지 인식 중...")
-        data_list = extract_receipt_data(processed_img)
-        
-        with open(output_json_path, 'w', encoding='utf-8') as f:
-            json.dump(data_list, f, ensure_ascii=False, indent=4)
-            
-        print(f"완료! 결과가 '{output_json_path}' 파일로 저장되었습니다.")
-        print(f"총 {len(data_list)}개의 품목이 검출되었습니다.")
-    else:
-        print("이미지 파일을 찾을 수 없습니다.")
