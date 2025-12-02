@@ -190,7 +190,7 @@ class _HomeScreenState extends State<HomeScreen> {
       } catch (e) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('영수증 인식 중 오류가 발생했습니다.')),
+          const SnackBar(content: Text('인식 중 오류가 발생했습니다.')),
         );
       }
     }
