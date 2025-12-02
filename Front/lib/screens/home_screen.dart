@@ -1,9 +1,13 @@
+import 'dart:io'; // 파일 처리를 위해 추가
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart'; // 이미지 선택 패키지
 import '../models/food_item.dart';
 import '../widgets/food_item_card.dart';
 import '../widgets/expiry_banner.dart';
+import '../services/ocr_service.dart'; // OCR 서비스 추가
 import './add_item_screen.dart';
 import './recipe_list_screen.dart';
+import './ocr_result_dialog.dart'; // 결과 팝업 추가
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,6 +19,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   StorageLocation? _selectedFilter;
   String _appBarTitle = '전체';
+  final OcrService _ocrService = OcrService(); // OCR 서비스 인스턴스
 
   final List<FoodItem> _mockFoodItems = [
     FoodItem(
@@ -60,7 +65,6 @@ class _HomeScreenState extends State<HomeScreen> {
       item.quantity = item.quantity + 1;
     });
   }
-
   void _decrementQuantity(FoodItem item) {
     setState(() {
       if (item.quantity > 1) {
@@ -81,7 +85,6 @@ class _HomeScreenState extends State<HomeScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) {
-        
         Widget buildFilterButton(String title, StorageLocation? filterValue) {
           final bool isSelected = _selectedFilter == filterValue;
           return Padding(
@@ -129,10 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
-              Text(
-                '조회할 보관 위치를 선택하세요',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
-              ),
+              // ...
               const SizedBox(height: 24),
               buildFilterButton('전체', null),
               buildFilterButton(_getStorageKoreanName(StorageLocation.refrigerated), StorageLocation.refrigerated),
@@ -147,12 +147,52 @@ class _HomeScreenState extends State<HomeScreen> {
   
   String _getStorageKoreanName(StorageLocation location) {
     switch (location) {
-      case StorageLocation.refrigerated:
-        return '냉장';
-      case StorageLocation.frozen:
-        return '냉동';
-      case StorageLocation.roomTemperature:
-        return '상온';
+      case StorageLocation.refrigerated: return '냉장';
+      case StorageLocation.frozen: return '냉동';
+      case StorageLocation.roomTemperature: return '상온';
+    }
+  }
+
+  // --- (추가) 이미지 선택 및 처리 프로세스 ---
+  Future<void> _pickImageAndProcess(ImageSource source) async {
+    final picker = ImagePicker();
+    final XFile? pickedFile = await picker.pickImage(source: source); // 이미지 선택
+
+    if (pickedFile != null) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => const Center(child: CircularProgressIndicator()),
+      );
+
+      try { // 2. 서버 전송 및 분석 (가짜 서비스 호출, 실제로는 File(pickedFile.path)를 전송)
+        final List<FoodItem> recognizedItems = await _ocrService.uploadImageAndGetItems(File(pickedFile.path));
+        Navigator.pop(context);
+
+        if (!mounted) return; // 결과 검토 팝업 표시
+
+        final List<FoodItem>? confirmedItems = await showDialog<List<FoodItem>>(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => OcrResultDialog(items: recognizedItems),
+        );
+
+        
+        if (confirmedItems != null && confirmedItems.isNotEmpty) { // 사용자가 확인 후 저장했으면 리스트에 추가
+          setState(() {
+            _mockFoodItems.addAll(confirmedItems);
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${confirmedItems.length}개의 품목이 추가되었습니다.')),
+          );
+        }
+
+      } catch (e) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('영수증 인식 중 오류가 발생했습니다.')),
+        );
+      }
     }
   }
 
@@ -173,14 +213,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 title: const Text('이미지로 입력'),
                 onTap: () {
                   Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('준비 중입니다.')),
-                  );
+                  // --- 수정사항: 이미지 처리 함수 연결 ---
+                  // 카메라로 할지 갤러리로 할지 선택하는 로직을 추가할 수 있음
+                  // 여기서는 갤러리가 기본값
+                  _pickImageAndProcess(ImageSource.gallery);
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.edit_note),
-                title: const Text('수동으로 입력'),
+                title: const Text('수동 입력'),
                 onTap: () {
                   Navigator.pop(ctx);
                   _navigateAndManageItem(context);
@@ -271,7 +312,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final List<FoodItem> filteredList;
-
     if (_selectedFilter == null) {
       filteredList = _mockFoodItems;
     } else {
@@ -298,7 +338,6 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Column(
         children: [
           ExpiryBanner(items: _mockFoodItems),
-          
           Expanded(
             child: ListView.builder(
               itemCount: sortedList.length, 
