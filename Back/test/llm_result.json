@@ -1,69 +1,27 @@
 {
     "status": "success",
-    "count": 11,
+    "count": 4,
     "data": [
         {
-            "product_name": "통심동까스",
-            "quantity": 16,
-            "unit": "g",
-            "category": "가공식품"
-        },
-        {
-            "product_name": "파프리카",
+            "product_name": "한우 왕떡갈비",
             "quantity": 1,
-            "unit": "팩",
-            "category": "채소"
-        },
-        {
-            "product_name": "완숙토마토",
-            "quantity": 4,
             "unit": "개",
-            "category": "채소"
-        },
-        {
-            "product_name": "양념닭주물럭",
-            "quantity": 2,
-            "unit": "kg",
             "category": "육류"
         },
         {
-            "product_name": "하인즈 케첩",
+            "product_name": "주꾸미 볶음",
             "quantity": 1,
             "unit": "개",
-            "category": "가공식품"
+            "category": "해산물"
         },
         {
-            "product_name": "감바니",
-            "quantity": 1,
-            "unit": "개",
-            "category": "가공식품"
-        },
-        {
-            "product_name": "그릭요거트",
+            "product_name": "치즈",
             "quantity": 1,
             "unit": "개",
             "category": "유제품"
         },
         {
-            "product_name": "글렉드슈레드치즈",
-            "quantity": 1,
-            "unit": "kg",
-            "category": "유제품"
-        },
-        {
-            "product_name": "임상추",
-            "quantity": 2,
-            "unit": "개",
-            "category": "채소"
-        },
-        {
-            "product_name": "물",
-            "quantity": 5,
-            "unit": "L",
-            "category": "음료"
-        },
-        {
-            "product_name": "미미신분",
+            "product_name": "잔디",
             "quantity": 1,
             "unit": "개",
             "category": "기타"
