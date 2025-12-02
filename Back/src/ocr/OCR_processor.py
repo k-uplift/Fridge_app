@@ -1,29 +1,22 @@
-# app/ocr/processor.py
+# app/ocr/OCR_processor.py
 
 import cv2
 import numpy as np
 import easyocr
-import re
 import os
 
 def preprocess_image(image_path):
-    """
-    이미지 경로를 받아 전처리(그레이스케일, 이진화 등)된 OpenCV 이미지 객체를 반환
-    """
     if not os.path.exists(image_path):
         return None
 
-    # 한글 경로 등 파일 읽기 문제 방지를 위한 np.fromfile 사용
     img_array = np.fromfile(image_path, np.uint8)
     img = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     
-    # 이미지 확대 (OCR 인식률 향상)
+    # 이미지 확대 및 전처리
     scaled = cv2.resize(gray, None, fx=2.0, fy=2.0, interpolation=cv2.INTER_CUBIC)
-    
     kernel = np.ones((3, 3), np.uint8)
     closing = cv2.morphologyEx(scaled, cv2.MORPH_CLOSE, kernel)
-    
     binary = cv2.adaptiveThreshold(
         closing, 255, 
         cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
@@ -32,78 +25,32 @@ def preprocess_image(image_path):
     )
     return binary
 
-def is_valid_korean_product(text):
-    """
-    추출된 텍스트가 유효한 상품명인지 검증
-    """
-    pure_text = re.sub(r'[^가-힣a-zA-Z0-9]', '', text)
-    
-    if len(pure_text) < 2:
-        return False
-    
-    IGNORE_KEYWORDS = ["단가", "수량", "금액", "상품명", "합계", "결제", "카드", "면세", "부가세", "대표", "전화", "주소", "가맹점", "반품", "포인트", "교환", "할인", "현금", "승인"]
-    if any(k in pure_text for k in IGNORE_KEYWORDS):
-        return False
-
-    if not re.search(r'[가-힣]', pure_text):
-        return False
-
-    digit_count = len(re.sub(r'[^0-9]', '', pure_text))
-    if len(pure_text) > 0 and (digit_count / len(pure_text)) >= 0.8:
-        return False
-
-    return True
-
 def extract_receipt_data(image_array):
-    """
-    전처리된 이미지(numpy array)를 받아 EasyOCR로 텍스트 추출 및 파싱
-    """
-    # GPU 사용 가능시 gpu=True로 변경 권장
-    reader = easyocr.Reader(['ko', 'en'], gpu=False) 
+    reader = easyocr.Reader(['ko', 'en'], gpu=True) 
     results = reader.readtext(image_array)
     
-    parsed_data = []
+    if not results:
+        return []
+
+    results.sort(key=lambda r: (r[0][0][1], r[0][0][0]))
+
+    merged_lines = []
     
-    i = 0
-    while i < len(results):
-        _, text, prob = results[i]
+    current_line_y = results[0][0][0][1]
+    current_line_text = [results[0][1]] 
+    
+    for i in range(1, len(results)):
+        bbox, text, prob = results[i]
+        y_top = bbox[0][1]
         
-        if prob < 0.1:
-            i += 1
-            continue
-
-        if not is_valid_korean_product(text):
-            i += 1
-            continue
+        if abs(y_top - current_line_y) < 15: 
+            current_line_text.append(text)
+        else:
+            merged_lines.append(" ".join(current_line_text))
             
-        product_name = text
-        quantity = 1
-        
-        # 1. 같은 줄 끝에 수량이 있는 경우
-        match_inline = re.search(r'(\d+)$', product_name.strip())
-        if match_inline:
-            val = int(match_inline.group(1))
-            if 0 < val < 50:
-                quantity = val
-                product_name = re.sub(r'\d+$', '', product_name).strip()
+            current_line_text = [text]
+            current_line_y = y_top
+    
+    merged_lines.append(" ".join(current_line_text))
 
-        # 2. 다음 줄에 수량이 있는 경우
-        if quantity == 1 and i + 1 < len(results):
-            _, next_text, _ = results[i+1]
-            numbers = re.findall(r'\d+', next_text.replace(',', ''))
-            
-            for num_str in numbers:
-                val = int(num_str)
-                if 0 < val < 50:
-                    quantity = val
-                    break 
-        
-        clean_name = re.sub(r'^[^\w가-힣]+|[^\w가-힣]+$', '', product_name)
-
-        parsed_data.append({
-            "product_name": clean_name,
-            "quantity": quantity
-        })
-        i += 1
-
-    return parsed_data
+    return merged_lines
