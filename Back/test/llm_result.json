@@ -1,60 +1,72 @@
 {
     "status": "success",
-    "count": 9,
+    "count": 11,
     "data": [
         {
-            "product_name": "한돈 생목살",
-            "quantity": 1,
-            "unit": "개",
-            "category": "육류"
+            "product_name": "통심동까스",
+            "quantity": 16,
+            "unit": "g",
+            "category": "가공식품"
         },
         {
-            "product_name": "삼겹살",
+            "product_name": "파프리카",
             "quantity": 1,
-            "unit": "개",
-            "category": "육류"
+            "unit": "팩",
+            "category": "채소"
         },
         {
-            "product_name": "청양고추",
-            "quantity": 1,
+            "product_name": "완숙토마토",
+            "quantity": 4,
             "unit": "개",
             "category": "채소"
         },
         {
-            "product_name": "적상추",
+            "product_name": "양념닭주물럭",
+            "quantity": 2,
+            "unit": "kg",
+            "category": "육류"
+        },
+        {
+            "product_name": "하인즈 케첩",
             "quantity": 1,
+            "unit": "개",
+            "category": "가공식품"
+        },
+        {
+            "product_name": "감바니",
+            "quantity": 1,
+            "unit": "개",
+            "category": "가공식품"
+        },
+        {
+            "product_name": "그릭요거트",
+            "quantity": 1,
+            "unit": "개",
+            "category": "유제품"
+        },
+        {
+            "product_name": "글렉드슈레드치즈",
+            "quantity": 1,
+            "unit": "kg",
+            "category": "유제품"
+        },
+        {
+            "product_name": "임상추",
+            "quantity": 2,
             "unit": "개",
             "category": "채소"
         },
         {
-            "product_name": "햇반",
-            "quantity": 300,
-            "unit": "g",
-            "category": "가공식품"
+            "product_name": "물",
+            "quantity": 5,
+            "unit": "L",
+            "category": "음료"
         },
         {
-            "product_name": "햇반",
-            "quantity": 200,
-            "unit": "g",
-            "category": "가공식품"
-        },
-        {
-            "product_name": "소시지",
-            "quantity": 285,
-            "unit": "g",
-            "category": "가공식품"
-        },
-        {
-            "product_name": "코카콜라",
-            "quantity": 350,
-            "unit": "ml",
-            "category": "음료수"
-        },
-        {
-            "product_name": "소주",
+            "product_name": "미미신분",
             "quantity": 1,
-            "unit": "병",
-            "category": "음료수"
+            "unit": "개",
+            "category": "기타"
         }
     ]
 }
