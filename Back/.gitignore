@@ -3,3 +3,5 @@ app_venv/
 __pycache__/
 *.db
 *.sqlite3
+.idea/
+*.html
