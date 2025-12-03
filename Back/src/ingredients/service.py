@@ -1,4 +1,4 @@
-#service.py (유통기한 계산 및 시각적 라벨링 데이터)
+#service.py (유통기한 계산 및 시각적 라벨링)
 
 from datetime import datetime, timedelta
 import sqlite3
@@ -16,8 +16,7 @@ def get_id_by_name(conn: sqlite3.Connection, table_name: str, name: str) -> int:
     raise ValueError(f"ID를 찾을 수 없습니다: {table_name} - {name}")
 
 # --- 유통기한 계산 로직 ---
-
-def calculate_expiry_date(category: str, storage: str, manual_days: Optional[int] = None) -> str:
+def calculate_expiry_date(category_tag: str, storage_location: str, manual_days: Optional[int] = None) -> str:
     default_days: int
 
     # 유통기한 수동 지정
@@ -28,7 +27,7 @@ def calculate_expiry_date(category: str, storage: str, manual_days: Optional[int
         conn = get_db_connection()
         try:
             category_id = get_id_by_name(conn, 'Categories', category_tag)
-            location_id = get_id_by_name(conn, 'Storage_Locations', storage_location)
+            storage_location_id = get_id_by_name(conn, 'Storage_Locations', storage_location)
 
             cursor = conn.cursor()
 
@@ -36,9 +35,9 @@ def calculate_expiry_date(category: str, storage: str, manual_days: Optional[int
             cursor.execute("""
                     SELECT default_days FROM Expiration_Mapping
                     WHERE category_id = ? AND storage_location_id = ?
-            """, (category_id, location_id))
+            """, (category_id, storage_location_id))
 
-            result: Any = cursor.fetchone()
+            result: Optional[sqlite3.Row] = cursor.fetchone()
 
             if result:
                 default_days = result['default_days']
@@ -67,6 +66,7 @@ def calculate_remaining_days(expiry_date_str: str) -> int:
     try:
         expiry_date = datetime.strptime(expiry_date_str, "%Y-%m-%d").date()
     except ValueError:
+        print(f"유효하지 않은 날짜 포맷: {expiry_date_str}")
         return 0
 
     today = datetime.now().date()
