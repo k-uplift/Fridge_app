@@ -1,30 +1,42 @@
 {
     "status": "success",
-    "count": 4,
+    "count": 6,
     "data": [
         {
-            "product_name": "한우 왕떡갈비",
+            "product_name": "김치",
             "quantity": 1,
-            "unit": "개",
+            "unit": "",
+            "category": "반찬"
+        },
+        {
+            "product_name": "무",
+            "quantity": 1,
+            "unit": "",
+            "category": "채소"
+        },
+        {
+            "product_name": "떡갈비",
+            "quantity": 1,
+            "unit": "",
             "category": "육류"
         },
         {
-            "product_name": "주꾸미 볶음",
+            "product_name": "새우튀김",
             "quantity": 1,
-            "unit": "개",
+            "unit": "",
             "category": "해산물"
         },
         {
-            "product_name": "치즈",
+            "product_name": "주꾸미",
             "quantity": 1,
-            "unit": "개",
-            "category": "유제품"
+            "unit": "",
+            "category": "해산물"
         },
         {
-            "product_name": "잔디",
+            "product_name": "생엽어초밤",
             "quantity": 1,
-            "unit": "개",
-            "category": "기타"
+            "unit": "",
+            "category": "식재료"
         }
     ]
 }
