@@ -1,75 +1,70 @@
-# tests/test_ingredients_api.py
+# test_service.py
 
-import pytest
-from fastapi.testclient import TestClient
-from Fridge_app.Back.src.main import app
+import unittest
+from datetime import datetime, timedelta
+from src.ingredients.service import calculate_expiry_date, calculate_remaining_days, get_visual_labeling_data, register_ingredient_to_db
+from src.db.database import get_db_connection, ensure_value_exists
 
-# TestClient 인스턴스 생성 (FastAPI 앱을 인수로 전달)
-client = TestClient(app)
+class TestService(unittest.TestCase):
 
-# ---------------------------------------------------
-# Helper: 테스트 DB 사용 (선택 사항이나 권장)
-# NOTE: 현재 코드는 실제 fridge_app.db를 사용하므로,
-# 테스트 전에 DB를 삭제하고 테스트 후에 복원하는 작업이 필요합니다.
-# ---------------------------------------------------
+    def setUp(self):
+        """테스트용 DB 초기화 및 샘플 데이터 준비"""
+        self.conn = get_db_connection()
+        self.cursor = self.conn.cursor()
 
-def test_01_register_automatic_expiry_success():
-    """B1, B2: DB 매핑에 따른 유통기한 자동 설정 테스트 ('유제품'/'냉장' -> 7일)"""
+        # 테스트용 카테고리/저장위치 확보
+        self.category = "테스트카테고리"
+        self.storage = "테스트저장위치"
 
-    # 1. 오늘 날짜를 기준으로 예상 만료 날짜 계산
-    from datetime import datetime, timedelta
-    expected_date = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
+        self.category_id = ensure_value_exists(self.cursor, "Categories", self.category)
+        self.storage_id = ensure_value_exists(self.cursor, "Storage_Locations", self.storage)
+        self.conn.commit()
 
-    # 2. API에 데이터 전송 (manual_days = None)
-    response = client.post("/ingredients/register", json={
-        "name": "서울우유",
-        "category_tag": "유제품",
-        "storage_location": "냉장",
-        "quantity": 1.0,
-        "unit": "팩",
-        "manual_days": None
-    })
+    def tearDown(self):
+        """테스트 후 DB 커넥션 종료"""
+        self.conn.close()
 
-    # 3. 응답 검증
-    assert response.status_code == 200
-    data = response.json()
-    assert data["message"] == "식재료 등록 완료"
-    # 계산된 expiry_date가 예상 날짜와 일치하는지 확인
-    assert data["expiry_date"] == expected_date
+    def test_calculate_expiry_date_manual(self):
+        """수동 유통기한 지정"""
+        expiry = calculate_expiry_date(self.category, self.storage, manual_days=10)
+        expected = (datetime.now() + timedelta(days=10)).strftime("%Y-%m-%d")
+        self.assertEqual(expiry, expected)
 
-def test_02_register_manual_expiry_success():
-    """B3: 유통기한 수동 지정 테스트 (DB 매핑 값 무시)"""
+    def test_calculate_expiry_date_auto(self):
+        """자동 유통기한 계산"""
+        # Expiration_Mapping에 임시 기본값 추가
+        self.cursor.execute("""
+            INSERT OR REPLACE INTO Expiration_Mapping (category_id, storage_location_id, default_days)
+            VALUES (?, ?, ?)
+        """, (self.category_id, self.storage_id, 7))
+        self.conn.commit()
 
-    manual_days = 50 # 50일로 수동 지정
-    expected_date = (datetime.now() + timedelta(days=manual_days)).strftime("%Y-%m-%d")
+        expiry = calculate_expiry_date(self.category, self.storage)
+        expected = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
+        self.assertEqual(expiry, expected)
 
-    # 육류/냉동은 DB에 90일로 매핑되어 있지만, 50일이 적용되어야 합니다.
-    response = client.post("/ingredients/register", json={
-        "name": "한우 안심",
-        "category_tag": "육류",
-        "storage_location": "냉동",
-        "quantity": 300.0,
-        "unit": "g",
-        "manual_days": manual_days
-    })
+    def test_calculate_remaining_days_and_label(self):
+        """남은 일수 계산 및 라벨링"""
+        today_str = datetime.now().strftime("%Y-%m-%d")
+        remaining = calculate_remaining_days(today_str)
+        self.assertEqual(remaining, 0)
 
-    assert response.status_code == 200
-    data = response.json()
-    assert data["expiry_date"] == expected_date
+        label = get_visual_labeling_data(remaining)
+        self.assertEqual(label['label_color'], 'orange')  # 0~3일은 orange
 
-def test_03_register_invalid_category_failure():
-    """정규화된 DB에 존재하지 않는 카테고리 입력 시 실패 테스트"""
+    def test_register_ingredient(self):
+        """Ingredients 테이블에 등록"""
+        expiry = calculate_expiry_date(self.category, self.storage, manual_days=5)
+        result = register_ingredient_to_db(
+            name="테스트식재료",
+            category_id=self.category_id,
+            storage_location_id=self.storage_id,
+            quantity=1.0,
+            unit="개",
+            expiry_date=expiry
+        )
+        self.assertIn("id", result)
+        self.assertEqual(result["expiry_date"], expiry)
 
-    # '해산물'은 Categories 테이블에 없습니다.
-    response = client.post("/ingredients/register", json={
-        "name": "오징어",
-        "category_tag": "해산물",
-        "storage_location": "냉장",
-        "quantity": 1.0,
-        "unit": "개",
-        "manual_days": None
-    })
-
-    # service.py의 ValueError를 router.py가 400 Bad Request로 반환해야 함
-    assert response.status_code == 400
-    assert "ID를 찾을 수 없습니다" in response.json().get("detail", "")
+if __name__ == "__main__":
+    unittest.main()
