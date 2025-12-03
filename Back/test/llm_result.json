@@ -1,42 +1,54 @@
 {
     "status": "success",
-    "count": 6,
+    "count": 8,
     "data": [
         {
-            "product_name": "김치",
-            "quantity": 1,
-            "unit": "",
-            "category": "반찬"
+            "product_name": "노브랜드 곳밀크우",
+            "quantity": 2,
+            "unit": "개",
+            "category": "유제품"
         },
         {
-            "product_name": "무",
-            "quantity": 1,
-            "unit": "",
-            "category": "채소"
+            "product_name": "농심 포스틱",
+            "quantity": 849,
+            "unit": "g",
+            "category": "가공식품"
         },
         {
-            "product_name": "떡갈비",
-            "quantity": 1,
-            "unit": "",
-            "category": "육류"
+            "product_name": "농심 올리브찌파거",
+            "quantity": 3,
+            "unit": "개",
+            "category": "가공식품"
         },
         {
-            "product_name": "새우튀김",
-            "quantity": 1,
-            "unit": "",
-            "category": "해산물"
-        },
-        {
-            "product_name": "주꾸미",
-            "quantity": 1,
-            "unit": "",
-            "category": "해산물"
-        },
-        {
-            "product_name": "생엽어초밤",
-            "quantity": 1,
-            "unit": "",
+            "product_name": "산물기",
+            "quantity": 5,
+            "unit": "개",
             "category": "식재료"
+        },
+        {
+            "product_name": "호주국물오이스터불",
+            "quantity": 14,
+            "unit": "g",
+            "category": "식재료"
+        },
+        {
+            "product_name": "C미니드레싱골라답",
+            "quantity": 3,
+            "unit": "개",
+            "category": "가공식품"
+        },
+        {
+            "product_name": "물",
+            "quantity": 1,
+            "unit": "개",
+            "category": "음료"
+        },
+        {
+            "product_name": "건시디",
+            "quantity": 7,
+            "unit": "개",
+            "category": "가공식품"
         }
     ]
 }
