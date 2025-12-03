@@ -1,0 +1,60 @@
+{
+    "status": "success",
+    "count": 9,
+    "data": [
+        {
+            "product_name": "한돈 생목살",
+            "quantity": 1,
+            "unit": "개",
+            "category": "육류"
+        },
+        {
+            "product_name": "삼겹살",
+            "quantity": 1,
+            "unit": "개",
+            "category": "육류"
+        },
+        {
+            "product_name": "청양고추",
+            "quantity": 1,
+            "unit": "개",
+            "category": "채소"
+        },
+        {
+            "product_name": "적상추",
+            "quantity": 1,
+            "unit": "개",
+            "category": "채소"
+        },
+        {
+            "product_name": "햇반",
+            "quantity": 300,
+            "unit": "g",
+            "category": "가공식품"
+        },
+        {
+            "product_name": "햇반",
+            "quantity": 200,
+            "unit": "g",
+            "category": "가공식품"
+        },
+        {
+            "product_name": "소시지",
+            "quantity": 285,
+            "unit": "g",
+            "category": "가공식품"
+        },
+        {
+            "product_name": "코카콜라",
+            "quantity": 350,
+            "unit": "ml",
+            "category": "음료수"
+        },
+        {
+            "product_name": "소주",
+            "quantity": 1,
+            "unit": "병",
+            "category": "음료수"
+        }
+    ]
+}
