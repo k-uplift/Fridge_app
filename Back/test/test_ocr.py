@@ -14,7 +14,7 @@ sys.path.append(parent_dir)
 # ------------------------------------------------------------------
 # 2. 모듈 가져오기 & 앱 설정
 # ------------------------------------------------------------------
-from src.ocr.router import router as ocr_router
+from src.ocr.ocr_router import router as ocr_router
 
 app = FastAPI()
 app.include_router(ocr_router)
