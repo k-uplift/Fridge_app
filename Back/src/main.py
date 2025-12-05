@@ -2,8 +2,12 @@
 
 from fastapi import FastAPI
 from .db.database import initialize_database # DB 초기화 함수
-from .ingredients import router as ingredients_router
 from contextlib import asynccontextmanager
+
+from .ingredients.ingredients_router import router as ingredients_router
+from .ocr.ocr_router import router as ocr_router
+from .recipes.recipes_router import router as recipes_router
+# from .llm.router import router as llm_internal_router
 
 # ---------- Lifespan Context Manager 정의 (Startup/Shutdown 관리) ----------
 @asynccontextmanager
@@ -13,16 +17,19 @@ async def lifespan(app: FastAPI):
     initialize_database()
     yield
 
+
 # FastAPI 서버 객체 생성
 app = FastAPI(lifespan=lifespan)
 
+
 # ---------- API Endpoints (라우터) ----------
-# 식재료(Ingredients) 관련 라우터를
-app.include_router(ingredients_router.router, prefix="/ingredients", tags=["Ingredients"])
 
-# ---------- 라우터 뼈대 ----------
-# from .ocr import router as ocr_router
-# app.include_router(ocr_router.router, prefix="/ocr", tags=["OCR"])
+# 식재료관련 라우터
+app.include_router(ingredients_router, prefix="/ingredients", tags=["Ingredients"])
+# OCR 관련 라우터
+app.include_router(ocr_router, prefix="/ocr", tags=["OCR"])
+# 레시피 관련 라우터
+app.include_router(recipes_router, prefix="/recipes", tags=["Recipes"])
 
-# from .llm import router as llm_router
-# app.include_router(llm_router.router, prefix="/recipes", tags=["Recipes"])
+
+#app.include_router(llm_internal_router, prefix="/llm", tags=["Internal"])
