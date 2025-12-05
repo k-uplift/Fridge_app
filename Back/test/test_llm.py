@@ -10,7 +10,7 @@ sys.path.append(parent_dir)
 # 모듈 가져오기
 try:
 
-    from src.llm.router import router as llm_router
+    from src.llm.llm_router import router as llm_router
 except ImportError as e:
     print("라우터를 찾을 수 없습니다. 경로를 확인해주세요.")
     print(f"Error: {e}")
