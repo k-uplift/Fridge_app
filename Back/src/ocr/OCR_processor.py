@@ -18,17 +18,21 @@ class AdvancedOCRProcessor:
         self.DEBUG_MODE = True # 디버깅 모드 활성화
 
     def crop_receipt_area(self, image):
-        """[Step 1] 외곽선 검출 및 자르기"""
-        copy_img = image.copy()
-        ratio = image.shape[0] / 500.0
+        """[Step 1] 작게 검출하고, 좌표를 환산하여 원본에서 자르기"""
+        print("DEBUG: Step 1 - Detecting on resized, Cropping on Original...")
+        
         orig_h, orig_w = image.shape[:2]
         
-        resized = cv2.resize(image, (int(orig_w / ratio), 500))
+        # 1. 검출용 리사이징 (속도 및 검출률 향상)
+        detect_height = 500
+        ratio = orig_h / float(detect_height)
+        resized = cv2.resize(image, (int(orig_w / ratio), detect_height))
+        
         gray = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)
         gray = cv2.GaussianBlur(gray, (5, 5), 0)
         edged = cv2.Canny(gray, 75, 200)
 
-        cnts, _ = cv2.findContours(edged.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE) # <--- CHAIN_APPROX_SIMPLE 사용
+        cnts, _ = cv2.findContours(edged.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
         cnts = sorted(cnts, key=cv2.contourArea, reverse=True)[:5]
 
         screenCnt = None
@@ -39,14 +43,15 @@ class AdvancedOCRProcessor:
                 screenCnt = approx
                 break
 
-        if screenCnt is None or cv2.contourArea(screenCnt) < 500:
-            print("DEBUG: Step 1 failed (No clear outer contour found). Returning original image.")
-            if self.DEBUG_MODE:
-                cv2.imwrite(os.path.join(self.temp_dir, "debug_01_cropped.jpg"), image)
+        if screenCnt is None:
+            print("DEBUG: Step 1 failed. Returning original image.")
             return image
 
-        # 투시 변환 로직 (기존과 동일)
-        pts = screenCnt.reshape(4, 2) * ratio
+        # 2. 좌표 환산 (검출된 좌표 * 비율)
+        # screenCnt는 (4, 1, 2) 형태이므로 reshape 필요
+        pts = screenCnt.reshape(4, 2) * ratio 
+
+        # 3. 투시 변환 (원본 이미지 기준)
         rect = np.zeros((4, 2), dtype="float32")
         s = pts.sum(axis=1)
         rect[0], rect[2] = pts[np.argmin(s)], pts[np.argmax(s)]
@@ -54,19 +59,25 @@ class AdvancedOCRProcessor:
         rect[1], rect[3] = pts[np.argmin(diff)], pts[np.argmax(diff)]
         
         (tl, tr, br, bl) = rect
+        
+        # 원본 해상도 기준의 폭/높이 계산
         widthA = np.sqrt(((br[0] - bl[0]) ** 2) + ((br[1] - bl[1]) ** 2))
         widthB = np.sqrt(((tr[0] - tl[0]) ** 2) + ((tr[1] - tl[1]) ** 2))
         maxWidth = max(int(widthA), int(widthB))
+        
         heightA = np.sqrt(((tr[0] - br[0]) ** 2) + ((tr[1] - br[1]) ** 2))
         heightB = np.sqrt(((tl[0] - bl[0]) ** 2) + ((tl[1] - bl[1]) ** 2))
         maxHeight = max(int(heightA), int(heightB))
         
         dst = np.array([[0, 0], [maxWidth - 1, 0], [maxWidth - 1, maxHeight - 1], [0, maxHeight - 1]], dtype="float32")
         M = cv2.getPerspectiveTransform(rect, dst)
+        
+        # 원본 이미지(image)에서 잘라냄
         warped = cv2.warpPerspective(image, M, (maxWidth, maxHeight))
 
         if self.DEBUG_MODE:
-            cv2.imwrite(os.path.join(self.temp_dir, "debug_01_cropped.jpg"), warped)
+            cv2.imwrite(os.path.join(self.temp_dir, "debug_01_cropped_high_res.jpg"), warped)
+            
         return warped
 
     def add_padding(self, image, pad_size=10):
@@ -82,8 +93,8 @@ class AdvancedOCRProcessor:
 
     def sharpen_image(self, image):
         kernel = np.array([[0, -1, 0],
-                           [-1, 5,-1],
-                           [0, -1, 0]])
+                       [-1, 9, -1],
+                       [0, -1, 0]]) / 5.0
         return cv2.filter2D(image, -1, kernel)
 
     def apply_clahe(self, image):
@@ -131,11 +142,11 @@ class AdvancedOCRProcessor:
         _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
         
         # 2. Morphology Open (침식 후 팽창): 노이즈와 미세 획 제거 (글자 덩어리만 남김)
-        kernel_open = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2))
+        kernel_open = cv2.getStructuringElement(cv2.MORPH_RECT, (1, 1))
         opened = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel_open, iterations=1)
                                      
         # 3. 팽창 연산 (가로로 길게 팽창시켜 획을 이어 붙임)
-        kernel_dilate = cv2.getStructuringElement(cv2.MORPH_RECT, (100, 3))
+        kernel_dilate = cv2.getStructuringElement(cv2.MORPH_RECT, (1000, 1))
         dilated = cv2.dilate(opened, kernel_dilate, iterations=1)
 
         # 디버깅 파일 저장
@@ -196,7 +207,7 @@ class AdvancedOCRProcessor:
             final_line = cropped_line 
 
             padded_line = self.add_padding(final_line, pad_size=10)
-            resized_line = self.resize_height(padded_line, target_height=96)
+            resized_line = self.resize_height(padded_line, target_height=64)
             final_line_sharpened = self.sharpen_image(resized_line)
             
             # [New] 라인별 이미지 저장
@@ -218,11 +229,30 @@ class AdvancedOCRProcessor:
 
         print("DEBUG: Starting OCR Process.")
 
+        # 1. 고해상도 크롭 (원본 화질 유지)
         cropped_receipt = self.crop_receipt_area(image)
+        
+        # [중요] 2. 이미지 표준화 (Normalization)
+        # 이미지가 너무 크면(3000px) 커널이 안 먹히고, 너무 작으면(500px) 글자가 깨짐.
+        # 따라서 OCR하기 가장 좋은 "골든 사이즈"인 높이 1200px로 통일합니다.
+        # 이렇게 하면 find_line_contours의 (130, 1) 설정이 모든 이미지에서 항상 완벽하게 작동합니다.
+        
+        target_process_height = 1200
+        h, w = cropped_receipt.shape[:2]
+        if h > 0:
+            scale = target_process_height / h
+            new_w = int(w * scale)
+            # 고품질 리사이징 (INTER_AREA는 축소 시, CUBIC은 확대 시 좋음. 여기선 일반적인 CUBIC 사용)
+            cropped_receipt = cv2.resize(cropped_receipt, (new_w, target_process_height), interpolation=cv2.INTER_CUBIC)
+            print(f"DEBUG: Normalized image height to {target_process_height}px for consistent processing.")
+
+        if self.DEBUG_MODE:
+             cv2.imwrite(os.path.join(self.temp_dir, "debug_01_normalized.jpg"), cropped_receipt)
+
+        # 3. 라인 분리 및 처리
         line_images = self.segment_and_process_lines(cropped_receipt)
 
-        print(f"DEBUG: Step 3 (Line Segmentation) found {len(line_images)} lines.")
-        
+        print(f"DEBUG: Step 3 (Line Segmentation) found {len(line_images)} lines.") 
         results = []
         
         if not line_images:
