@@ -39,35 +39,41 @@ class _AddItemScreenState extends State<AddItemScreen> {
     }
   }
 
+  void _updateExpiryDateByCategory(FoodCategory? category) {
+    if (category == null || _isEditing) return;
+
+    DateTime newDate;
+    if (category == FoodCategory.cooked) {
+      newDate = DateTime.now().add(const Duration(days: 3)); // 조리된 음식은 기본 3일
+    } else if (category == FoodCategory.frozen) { 
+      newDate = DateTime.now().add(const Duration(days: 30)); // 냉동식품은 기본 30일
+    } else {
+      newDate = DateTime.now().add(const Duration(days: 7)); // 그 외 기본 7일
+    }
+
+    setState(() {
+      _expiryDate = newDate;
+    });
+  }
+
   String _getCategoryKoreanName(FoodCategory category) {
     switch (category) {
-      case FoodCategory.dairy:
-        return '유제품';
-      case FoodCategory.meat:
-        return '육류';
-      case FoodCategory.vegetable:
-        return '채소';
-      case FoodCategory.fruit:
-        return '과일';
-      case FoodCategory.frozen:
-        return '냉동식품';
-      case FoodCategory.seasoning:
-        return '조미료';
-      case FoodCategory.cooked:
-        return '조리음식';
-      case FoodCategory.etc:
-        return '기타';
+      case FoodCategory.dairy: return '유제품';
+      case FoodCategory.meat: return '육류';
+      case FoodCategory.vegetable: return '채소';
+      case FoodCategory.fruit: return '과일';
+      case FoodCategory.frozen: return '냉동식품';
+      case FoodCategory.seasoning: return '조미료';
+      case FoodCategory.cooked: return '조리음식';
+      case FoodCategory.etc: return '기타';
     }
   }
 
   String _getStorageKoreanName(StorageLocation location) {
     switch (location) {
-      case StorageLocation.refrigerated:
-        return '냉장';
-      case StorageLocation.frozen:
-        return '냉동';
-      case StorageLocation.roomTemperature:
-        return '상온';
+      case StorageLocation.refrigerated: return '냉장';
+      case StorageLocation.frozen: return '냉동';
+      case StorageLocation.roomTemperature: return '상온';
     }
   }
 
@@ -131,18 +137,11 @@ class _AddItemScreenState extends State<AddItemScreen> {
               TextFormField(
                 initialValue: _name,
                 decoration: const InputDecoration(labelText: '음식 이름'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return '음식 이름을 입력하세요.';
-                  }
-                  return null;
-                },
-                onSaved: (value) {
-                  _name = value!;
-                },
+                validator: (value) =>
+                    (value == null || value.isEmpty) ? '음식 이름을 입력하세요.' : null,
+                onSaved: (value) => _name = value!,
               ),
               const SizedBox(height: 16),
-
               DropdownButtonFormField<FoodCategory>(
                 decoration: const InputDecoration(labelText: '분류'),
                 value: _selectedCategory,
@@ -155,12 +154,12 @@ class _AddItemScreenState extends State<AddItemScreen> {
                 onChanged: (value) {
                   setState(() {
                     _selectedCategory = value;
+                    _updateExpiryDateByCategory(value);
                   });
                 },
                 validator: (value) => value == null ? '분류를 선택하세요.' : null,
               ),
               const SizedBox(height: 16),
-
               DropdownButtonFormField<StorageLocation>(
                 decoration: const InputDecoration(labelText: '보관 방법'),
                 value: _selectedStorage,
@@ -170,15 +169,10 @@ class _AddItemScreenState extends State<AddItemScreen> {
                     child: Text(_getStorageKoreanName(location)),
                   );
                 }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedStorage = value;
-                  });
-                },
+                onChanged: (value) => setState(() => _selectedStorage = value),
                 validator: (value) => value == null ? '보관 방법을 선택하세요.' : null,
               ),
               const SizedBox(height: 16),
-
               TextFormField(
                 decoration: const InputDecoration(labelText: '수량'),
                 initialValue: (_quantity == null)
@@ -188,21 +182,15 @@ class _AddItemScreenState extends State<AddItemScreen> {
                         : _quantity!.toString()),
                 keyboardType: TextInputType.number,
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return '수량을 입력하세요.';
-                  }
-                  if (double.tryParse(value) == null ||
-                      double.parse(value) <= 0) {
-                    return '유효한 수량을 입력하세요.';
+                  if (value == null || value.isEmpty) return '수량을 입력하세요.';
+                  if (double.tryParse(value) == null || double.parse(value) <= 0) {
+                    return '식재료 수량을 입력하세요.';
                   }
                   return null;
                 },
-                onSaved: (value) {
-                  _quantity = double.parse(value!);
-                },
+                onSaved: (value) => _quantity = double.parse(value!),
               ),
               const SizedBox(height: 16),
-
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -214,16 +202,12 @@ class _AddItemScreenState extends State<AddItemScreen> {
                 ],
               ),
               const SizedBox(height: 32),
-
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    style:
-                        ElevatedButton.styleFrom(backgroundColor: Colors.grey),
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
                     child: const Text('취소'),
                   ),
                   ElevatedButton(
