@@ -30,7 +30,7 @@ class FoodItemCard extends StatelessWidget {
       label = '${difference.abs()}일 지남';
       chipColor = Colors.red.shade700;
     } else if (difference == 0) {
-      label = '오늘 만료';
+      label = '오늘까지';
       chipColor = Colors.red.shade500;
     } else if (difference <= 3) {
       label = '$difference일 남음';

@@ -26,12 +26,12 @@ class _HomeScreenState extends State<HomeScreen> {
   String _searchQuery = '';
   
   SortOption _sortOption = SortOption.expiryDate;
-  bool _isAscending = true; // true: 오름차순, false: 내림차순
+  bool _isAscending = true;
 
   final OcrService _ocrService = OcrService();
-  
   final List<HistoryItem> _historyItems = [];
-  
+
+
   final List<FoodItem> _mockFoodItems = [ // 샘플 데이터
     FoodItem(
       id: '1', name: '감자', quantity: 5, unit: '개',
@@ -55,12 +55,12 @@ class _HomeScreenState extends State<HomeScreen> {
     ),
   ];
 
-  void _confirmDeleteOrUse(FoodItem item, {bool isDecrement = false}) {   // 사용완료 or 삭제 시 확인 다이얼로그
+  void _confirmDeleteOrUse(FoodItem item, {bool isDecrement = false}) { // 삭제, 소진 관리
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(isDecrement ? '수량 소진' : '항목 삭제'),
-        content: Text('어떻게 처리할까요?'),
+        content: const Text('어떻게 처리할까요?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -86,7 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _processItemHistory(FoodItem item, HistoryAction action) {  // 히스토리로 이동
+  void _processItemHistory(FoodItem item, HistoryAction action) {
     setState(() {
       _historyItems.add(HistoryItem(
         id: DateTime.now().toString(),
@@ -95,8 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
         unit: item.unit,
         date: DateTime.now(),
         action: action,
-        
-        category: item.category, // 복구를 위해 원본 정보 저장
+        category: item.category,
         storageLocation: item.storageLocation,
         expiryDate: item.expiryDate,
       ));
@@ -107,10 +106,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _restoreHistoryItem(HistoryItem historyItem) {  // 히스토리에서 복구
+  void _restoreHistoryItem(HistoryItem historyItem) {
     setState(() {
       _mockFoodItems.add(FoodItem(
-        id: DateTime.now().toString(), // 복구 시 새 ID
+        id: DateTime.now().toString(),
         name: historyItem.name,
         quantity: historyItem.quantity,
         unit: historyItem.unit,
@@ -120,13 +119,12 @@ class _HomeScreenState extends State<HomeScreen> {
       ));
       _historyItems.remove(historyItem);
     });
-    
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('식재료를 다시 복구했어요.')),
+      const SnackBar(content: Text('식재료를 다시 복구했어요.')),
     );
   }
  
-  void _deleteHistoryItem(HistoryItem historyItem) {  // 히스토리에서 삭제
+  void _deleteHistoryItem(HistoryItem historyItem) {
     setState(() {
       _historyItems.remove(historyItem);
     });
@@ -135,7 +133,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
  
-  void _incrementQuantity(FoodItem item) {  // 수량 조절
+  void _incrementQuantity(FoodItem item) {
     setState(() {
       item.quantity = item.quantity + 1;
     });
@@ -151,7 +149,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
   
-  void _navigateToRecipeList(List<FoodItem> items) { // 레시피 추천 화면 이동
+  void _navigateToRecipeList(List<FoodItem> items) {
     if (items.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('재료가 없어요.')));
       return;
@@ -162,7 +160,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _navigateToHistory() {   // 히스토리 화면 이동(복구/삭제 콜백 전달)
+  void _navigateToHistory() {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -172,12 +170,12 @@ class _HomeScreenState extends State<HomeScreen> {
               historyItems: _historyItems,
               onRestore: (item) {
                  _restoreHistoryItem(item); 
-                 setHistoryState(() {});
-                 Navigator.pop(context);
+                 setHistoryState(() {}); 
+                 Navigator.pop(context); 
               },
               onDelete: (item) {
                 _deleteHistoryItem(item);
-                setHistoryState(() {});
+                setHistoryState(() {}); 
               },
             );
           }
@@ -186,7 +184,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  List<FoodItem> _getFilteredAndSortedItems() {   // 필터 및 정렬
+  List<FoodItem> _getFilteredAndSortedItems() {
     List<FoodItem> items = _mockFoodItems.where((item) {
       if (_selectedStorageFilter != null && item.storageLocation != _selectedStorageFilter) {
         return false;
@@ -209,20 +207,23 @@ class _HomeScreenState extends State<HomeScreen> {
         case SortOption.expiryDate:
           result = a.expiryDate.compareTo(b.expiryDate);
           break;
+
         case SortOption.name:
           result = a.name.compareTo(b.name);
           break;
+
         case SortOption.quantity:
           result = a.quantity.compareTo(b.quantity);
           break;
       }
+
       return _isAscending ? result : -result;
     });
 
     return items;
   }
 
-  void _showFilterModal(BuildContext context) {   // 필터 설정
+  void _showFilterModal(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -231,9 +232,9 @@ class _HomeScreenState extends State<HomeScreen> {
         return StatefulBuilder( 
           builder: (BuildContext context, StateSetter setModalState) {
             return DraggableScrollableSheet(
-              initialChildSize: 0.7,
-              minChildSize: 0.5,
-              maxChildSize: 0.95,
+              initialChildSize: 0.5,
+              minChildSize: 0.4,
+              maxChildSize: 0.8,
               expand: false,
               builder: (context, scrollController) {
                 return SingleChildScrollView(
@@ -252,7 +253,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             selected: _selectedStorageFilter == null,
                             onSelected: (bool selected) {
                               setModalState(() => _selectedStorageFilter = null);
-                              setState(() {}); // 메인 화면 갱신
+                              setState(() {});
                             },
                           ),
                           ...StorageLocation.values.map((loc) => FilterChip(
@@ -266,7 +267,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                       const Divider(height: 30),
-
                       const Text('카테고리', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 8),
                       Wrap(
@@ -289,46 +289,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             },
                           )),
                         ],
-                      ),
-                      const Divider(height: 30),
-
-                      const Text('정렬 기준', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 8),
-                      DropdownButton<SortOption>(
-                        value: _sortOption,
-                        isExpanded: true,
-                        underline: Container(height: 1, color: Colors.deepPurple),
-                        items: const [
-                          DropdownMenuItem(value: SortOption.expiryDate, child: Text('유통기한')),
-                          DropdownMenuItem(value: SortOption.name, child: Text('이름')),
-                          DropdownMenuItem(value: SortOption.quantity, child: Text('수량')),
-                        ],
-                        onChanged: (SortOption? newValue) {
-                          if (newValue != null) {
-                            setModalState(() => _sortOption = newValue);
-                            setState(() {});
-                          }
-                        },
-                      ),
-                      
-                      const SizedBox(height: 24),
-
-                      const Text('정렬 순서', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 8),
-                      DropdownButton<bool>(
-                        value: _isAscending,
-                        isExpanded: true,
-                        underline: Container(height: 1, color: Colors.deepPurple),
-                        items: const [
-                          DropdownMenuItem(value: true, child: Text('오름차순')),
-                          DropdownMenuItem(value: false, child: Text('내림차순')),
-                        ],
-                        onChanged: (bool? newValue) {
-                          if (newValue != null) {
-                            setModalState(() => _isAscending = newValue);
-                            setState(() {});
-                          }
-                        },
                       ),
                       
                       const SizedBox(height: 30),
@@ -356,13 +316,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String _getCategoryKoreanName(FoodCategory category) {
     switch (category) {
-      case FoodCategory.dairy: return '유제품';
-      case FoodCategory.meat: return '육류';
-      case FoodCategory.vegetable: return '채소';
       case FoodCategory.fruit: return '과일';
       case FoodCategory.frozen: return '냉동식품';
-      case FoodCategory.seasoning: return '조미료';
+      case FoodCategory.dairy: return '유제품';
+      case FoodCategory.meat: return '육류';
       case FoodCategory.cooked: return '조리음식';
+      case FoodCategory.seasoning: return '조미료';
+      case FoodCategory.vegetable: return '채소';
       case FoodCategory.etc: return '기타';
     }
   }
@@ -375,30 +335,35 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _pickImageAndProcess(ImageSource source) async {   // 이미지 OCR 및 추가 로직
+  Future<void> _pickImageAndProcess(ImageSource source) async {
     final picker = ImagePicker();
     final XFile? pickedFile = await picker.pickImage(source: source);
+
     if (pickedFile != null) {
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (ctx) => const Center(child: CircularProgressIndicator()),
       );
+
       try {
         final List<FoodItem> recognizedItems = await _ocrService.uploadImageAndGetItems(File(pickedFile.path));
         Navigator.pop(context);
+
         if (!mounted) return;
+
         final List<FoodItem>? confirmedItems = await showDialog<List<FoodItem>>(
           context: context,
           barrierDismissible: false,
           builder: (ctx) => OcrResultDialog(items: recognizedItems),
         );
+
         if (confirmedItems != null && confirmedItems.isNotEmpty) {
           setState(() {
             _mockFoodItems.addAll(confirmedItems);
           });
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${confirmedItems.length}개의 품목이 추가되었어요.')),
+            SnackBar(content: Text('${confirmedItems.length}개의 항목이 추가되었어요.')),
           );
         }
       } catch (e) {
@@ -422,7 +387,7 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 16),
               ListTile(
                 leading: const Icon(Icons.image),
-                title: const Text('사진으로 입력하기'),
+                title: const Text('이미지로 입력'),
                 onTap: () {
                   Navigator.pop(ctx);
                   _pickImageAndProcess(ImageSource.gallery);
@@ -430,7 +395,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               ListTile(
                 leading: const Icon(Icons.edit_note),
-                title: const Text('직접 입력하기'),
+                title: const Text('직접 입력'),
                 onTap: () {
                   Navigator.pop(ctx);
                   _navigateAndManageItem(context);
@@ -450,6 +415,7 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (context) => AddItemScreen(existingItem: existingItem),
       ),
     );
+    
     if (resultItem != null) {
       setState(() {
         if (existingItem != null) {
@@ -460,7 +426,7 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('식재료가 ${existingItem != null ? '수정' : '등록'}되었어요.')),
+        SnackBar(content: Text('식재료를 ${existingItem != null ? '수정' : '등록'}했어요.')),
       );
     }
   }
@@ -516,46 +482,105 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.restaurant_menu, color: Colors.deepPurple),
-            tooltip: '레시피 추천',
+            tooltip: '전체 재료로 레시피 추천',
             onPressed: () => _navigateToRecipeList(_mockFoodItems),
           ),
         ],
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: '식재료 검색',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 10),
-              ),
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value;
-                });
+          ExpiryBanner(items: _mockFoodItems),
+
+          Expanded(
+            child: ListView.builder(
+              itemCount: filteredList.isEmpty ? 2 : filteredList.length + 1,
+              itemBuilder: (context, index) {
+                if (index == 0) {
+                  return Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                        child: TextField(
+                          decoration: InputDecoration(
+                            hintText: '식재료 검색',
+                            prefixIcon: const Icon(Icons.search),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+                            isDense: true,
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              _searchQuery = value;
+                            });
+                          },
+                        ),
+                      ),
+                      
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            DropdownButton<SortOption>(
+                              value: _sortOption,
+                              icon: const Icon(Icons.sort, size: 18),
+                              style: const TextStyle(fontSize: 13, color: Colors.black87),
+                              underline: Container(), 
+                              isDense: true, 
+                              alignment: AlignmentDirectional.centerEnd,
+                              onChanged: (SortOption? newValue) {
+                                if (newValue != null) {
+                                  setState(() => _sortOption = newValue);
+                                }
+                              },
+                              items: const [
+                                DropdownMenuItem(value: SortOption.expiryDate, child: Text('유통기한')),
+                                DropdownMenuItem(value: SortOption.name, child: Text('이름')),
+                                DropdownMenuItem(value: SortOption.quantity, child: Text('수량')),
+                              ],
+                            ),
+                            const SizedBox(width: 12),
+                            DropdownButton<bool>(
+                              value: _isAscending,
+                              icon: Icon(_isAscending ? Icons.arrow_upward : Icons.arrow_downward, size: 16),
+                              style: const TextStyle(fontSize: 13, color: Colors.black87),
+                              underline: Container(),
+                              isDense: true,
+                              alignment: AlignmentDirectional.centerEnd,
+                              onChanged: (bool? newValue) {
+                                if (newValue != null) {
+                                  setState(() => _isAscending = newValue);
+                                }
+                              },
+                              items: const [
+                                DropdownMenuItem(value: true, child: Text('오름차순')),
+                                DropdownMenuItem(value: false, child: Text('내림차순')),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  );
+                }
+
+                if (filteredList.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.only(top: 50.0),
+                    child: Center(child: Text('조건에 맞는 식재료가 없어요.')),
+                  );
+                }
+
+                final item = filteredList[index - 1];
+                return FoodItemCard(
+                  item: item,
+                  onTap: () => _navigateToRecipeList([item]),
+                  onIncrement: () => _incrementQuantity(item),
+                  onDecrement: () => _decrementQuantity(item),
+                  onLongPress: () => _showEditDeleteModal(context, item),
+                );
               },
             ),
-          ),
-          ExpiryBanner(items: _mockFoodItems),
-          Expanded(
-            child: filteredList.isEmpty
-                ? const Center(child: Text('검색된 식재료가 없어요.'))
-                : ListView.builder(
-                    itemCount: filteredList.length,
-                    itemBuilder: (context, index) {
-                      final item = filteredList[index];
-                      return FoodItemCard(
-                        item: item,
-                        onTap: () => _navigateToRecipeList([item]),
-                        onIncrement: () => _incrementQuantity(item),
-                        onDecrement: () => _decrementQuantity(item),
-                        onLongPress: () => _showEditDeleteModal(context, item),
-                      );
-                    },
-                  ),
           ),
         ],
       ),

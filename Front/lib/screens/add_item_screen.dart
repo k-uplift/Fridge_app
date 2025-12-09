@@ -58,13 +58,13 @@ class _AddItemScreenState extends State<AddItemScreen> {
 
   String _getCategoryKoreanName(FoodCategory category) {
     switch (category) {
-      case FoodCategory.dairy: return '유제품';
-      case FoodCategory.meat: return '육류';
-      case FoodCategory.vegetable: return '채소';
       case FoodCategory.fruit: return '과일';
       case FoodCategory.frozen: return '냉동식품';
-      case FoodCategory.seasoning: return '조미료';
+      case FoodCategory.dairy: return '유제품';
+      case FoodCategory.meat: return '육류';
       case FoodCategory.cooked: return '조리음식';
+      case FoodCategory.seasoning: return '조미료';
+      case FoodCategory.vegetable: return '채소';
       case FoodCategory.etc: return '기타';
     }
   }
