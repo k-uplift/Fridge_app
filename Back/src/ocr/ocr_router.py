@@ -41,9 +41,9 @@ async def analyze_receipt(file: UploadFile = File(...)):
         
         # 'meta' 키 대신 'count' 키를 직접 사용하여 안정성을 높입니다.
         return {
-            "status": result.get('status', 'success'),
-            "count": final_count,
-            "data": result.get('data', [])
+            "status": result.get("status", "success"),
+            "line_count": result.get("line_count", 0),
+            "lines": result.get("lines", [])
         }
 
     except Exception as e:
