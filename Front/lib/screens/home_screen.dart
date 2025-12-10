@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/food_item.dart';
 import '../models/history_item.dart';
+import '../models/recipe.dart'; 
 import './history_screen.dart';
 import '../widgets/food_item_card.dart';
 import '../widgets/expiry_banner.dart';
 import '../services/ocr_service.dart';
 import './add_item_screen.dart';
 import './recipe_list_screen.dart';
+import './recipe_detail_screen.dart';
 import './ocr_result_dialog.dart';
 
 enum SortOption { expiryDate, name, quantity }
@@ -54,7 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
     ),
   ];
 
-  List<FoodCategory> get _sortedCategories {   // 카테고리 정렬(가나다순, 기타는 맨 뒤)
+  List<FoodCategory> get _sortedCategories {   
     final categories = FoodCategory.values.toList();
     categories.sort((a, b) {
       if (a == FoodCategory.etc) return 1;
@@ -64,7 +66,167 @@ class _HomeScreenState extends State<HomeScreen> {
     return categories;
   }
 
-  void _confirmDeleteOrUse(FoodItem item, {bool isDecrement = false}) { // 삭제/소진 관리
+  String _getParticle(String word) {
+    if (word.isEmpty) return '로';
+    
+    int code = word.runes.last;
+    if (code < 0xAC00 || code > 0xD7A3) return '로'; 
+
+    int jongseong = (code - 0xAC00) % 28;
+
+    if (jongseong == 0 || jongseong == 8) { 
+      return '로';
+    } else {
+      return '으로';
+    }
+  }
+
+  void _showRecipeDialog(BuildContext context, FoodItem item) {
+    final List<Recipe> matchingRecipes = MOCK_RECIPES.where(
+      (recipe) => recipe.mainIngredients.any(
+        (ingredient) => item.name.contains(ingredient),
+      ),
+    ).toList();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          backgroundColor: Colors.white,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: Container(
+            height: 500,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Stack(
+              children: [
+                // 1. 내용물
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 24),
+                      Text(
+                        '${item.name}${_getParticle(item.name)} 만들 수 있는 요리',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '${item.name}(를) 활용한 레시피를 선택하세요.',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 20),
+
+                      Expanded(
+                        child: matchingRecipes.isEmpty
+                            ? const Center(child: Text("등록된 레시피가 없어요."))
+                            : ListView.builder(
+                                itemCount: matchingRecipes.length,
+                                itemBuilder: (context, index) {
+                                  final recipe = matchingRecipes[index];
+                                  return Container(
+                                    margin: const EdgeInsets.only(bottom: 12),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(color: Colors.grey[300]!),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: ListTile(
+                                      contentPadding: const EdgeInsets.all(12),
+                                      title: Text(
+                                        recipe.name,
+                                        style: const TextStyle(fontWeight: FontWeight.bold),
+                                      ),
+                                      subtitle: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          const SizedBox(height: 8),
+                                          Row(
+                                            children: [
+                                              Icon(Icons.access_time, size: 14, color: Colors.grey[600]),
+                                              const SizedBox(width: 4),
+                                              Text('${recipe.durationInMinutes}분  ',
+                                                  style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                                              const SizedBox(width: 8),
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                                decoration: BoxDecoration(
+                                                  color: recipe.difficulty == '쉬움' ? Colors.black : Colors.grey[300],
+                                                  borderRadius: BorderRadius.circular(4),
+                                                ),
+                                                child: Text(
+                                                  recipe.difficulty,
+                                                  style: TextStyle(
+                                                    fontSize: 11,
+                                                    color: recipe.difficulty == '쉬움' ? Colors.white : Colors.black,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            '재료: ${recipe.ingredients.take(3).join(", ")} 외 ${recipe.ingredients.length > 3 ? recipe.ingredients.length - 3 : 0}개',
+                                            style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ],
+                                      ),
+                                      onTap: () {
+                                        showDialog(
+                                          context: context,
+                                          builder: (context) => RecipeDetailScreen(recipe: recipe),
+                                        );
+                                      },
+                                    ),
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // 2. 닫기 버튼
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(20),
+                      onTap: () => Navigator.pop(context),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: const Icon(
+                          Icons.close,
+                          size: 20,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _confirmDeleteOrUse(FoodItem item, {bool isDecrement = false}) { 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -470,7 +632,7 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: Colors.grey[50],
         surfaceTintColor: Colors.grey[50],
         leading: IconButton(
-          icon: const Icon(Icons.filter_list),
+          icon: const Icon(Icons.menu), 
           onPressed: () => _showFilterModal(context),
         ),
         actions: [
@@ -480,7 +642,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: _navigateToHistory,
           ),
           IconButton(
-            icon: const Icon(Icons.restaurant_menu, color: Colors.deepPurple),
+            icon: const Icon(Icons.restaurant_menu), 
             tooltip: '전체 재료로 레시피 추천',
             onPressed: () => _navigateToRecipeList(_mockFoodItems),
           ),
@@ -577,7 +739,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 final item = filteredList[index - 1];
                 return FoodItemCard(
                   item: item,
-                  onTap: () => _navigateToRecipeList([item]),
+                  onTap: () => _showRecipeDialog(context, item),
                   onIncrement: () => _incrementQuantity(item),
                   onDecrement: () => _decrementQuantity(item),
                   onLongPress: () => _showEditDeleteModal(context, item),

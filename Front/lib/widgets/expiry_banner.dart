@@ -68,7 +68,21 @@ class _ExpiryBannerState extends State<ExpiryBanner> {
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          title: const Text('유통 기한 임박 식재료', style: TextStyle(fontWeight: FontWeight.bold)),
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          
+          title: const Center(
+            child: Text(
+              '유통기한이 임박한 식재료',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          
           content: SizedBox(
             width: double.maxFinite,
             child: ListView.separated(
@@ -100,7 +114,7 @@ class _ExpiryBannerState extends State<ExpiryBanner> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('확인'),
+              child: const Text('확인', style: TextStyle(color: Colors.black)),
             ),
           ],
         );

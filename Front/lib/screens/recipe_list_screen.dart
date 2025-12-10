@@ -54,15 +54,16 @@ class RecipeListScreen extends StatelessWidget {
                   color: Colors.white,
                   margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: ListTile(
-                    title: Text(recipe.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text('${recipe.durationInMinutes}분  |  난이도: ${recipe.difficulty}'),
+                    title: Text(recipe.name,
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text(
+                        '${recipe.durationInMinutes}분  |  난이도: ${recipe.difficulty}'),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => RecipeDetailScreen(recipe: recipe),
-                        ),
+                      showDialog(
+                        context: context,
+                        builder: (context) => RecipeDetailScreen(recipe: recipe),
                       );
                     },
                   ),
