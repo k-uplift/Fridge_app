@@ -198,7 +198,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
 
-                // 2. 닫기 버튼
                 Positioned(
                   top: 8,
                   right: 8,

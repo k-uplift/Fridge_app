@@ -58,6 +58,9 @@ class HistoryScreen extends StatelessWidget {
                         ),
                       ),
                       PopupMenuButton<String>(
+                        color: Colors.white,
+                        surfaceTintColor: Colors.white,
+                        
                         onSelected: (value) {
                           if (value == 'restore') {
                             onRestore(item);
