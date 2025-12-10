@@ -2,33 +2,6 @@ import ollama
 import json
 import re
 
-def get_text_from_item(item):
-    """
-    [수정됨] JSON 구조(raw_text, avg_confidence)에 맞춰 텍스트 추출 및 불확실 태그 부착
-    """
-    if isinstance(item, dict):
-        # 1. 텍스트 추출: raw_text 우선, 없으면 text -> product_name 순
-        text = str(item.get('raw_text', '')).strip()
-        # 2. 신뢰도 추출 로직 개선 (List vs Float 처리)
-        avg_conf = 0.0
-        # Case A: avg_confidence 키가 명시적으로 있는 경우 (가장 정확)
-        if 'avg_confidence' in item:
-            avg_conf = float(item['avg_confidence'])
-        # Case B: avg_confidence가 없고 confidence(리스트)만 있는 경우
-        elif 'confidence' in item:
-            conf_data = item['confidence']
-            if isinstance(conf_data, list) and conf_data:
-                # 리스트 평균 계산
-                avg_conf = sum(conf_data) / len(conf_data)
-            elif isinstance(conf_data, (float, int)):
-                # 혹시 단일 값으로 들어온 경우
-                avg_conf = float(conf_data)
-        # 3. 로직 적용: 평균 신뢰도가 0.6 미만이면 태그 부착
-        if 0 < avg_conf < 0.6:
-            return f"(불확실:{text})"
-        return text
-    return str(item).strip()
-
 def is_garbage_text(item):
     """
     [수정됨] 1차 필터링 로직 개선
@@ -51,10 +24,6 @@ def is_garbage_text(item):
                 avg_conf = sum(conf_data) / len(conf_data)
             elif isinstance(conf_data, (float, int)):
                 avg_conf = float(conf_data)
-        
-        # 신뢰도가 너무 낮으면(0.2 미만) 삭제
-        if 0 < avg_conf < 0.2:
-            return True
     else:
         text = str(item).strip()
 
@@ -62,8 +31,6 @@ def is_garbage_text(item):
     if not text: return True
     
     # 3. [중요 수정] "의미 있는 문자"가 하나도 없으면 삭제
-    # 기존: 한글이 없으면 삭제 (문제 발생)
-    # 변경: 한글, 숫자(0-9), 영어(a-zA-Z) 중 하나라도 있으면 유지
     # -> 이렇게 하면 특수문자만 있는 경우(예: ".", "-", "*")는 걸러지고, "1", "100g", "mart" 등은 살아남음
     if not re.search(r'[가-힣0-9a-zA-Z]', text):
         return True
@@ -84,121 +51,147 @@ def is_garbage_text(item):
 
     return False
 
-def refine_batch_items(ocr_chunk):
-    """
-    [통합됨] LLM을 사용하여 OCR 청크를 정제하고 JSON화 (One-Pass)
-    - 기존 1차(정제) + 2차(검증) 로직을 하나의 프롬프트로 병합
-    """
+# 2. LLM 호출 함수 (One-Shot 프롬프트 적용)
+def refine_batch_items(lines: list, image_path: str | None = None):
     input_lines = []
-    for i, item in enumerate(ocr_chunk):
-        text = get_text_from_item(item)
-        input_lines.append(f"Line {i+1}: {text}")
+    for i, item in enumerate(lines):
+        if isinstance(item, dict):
+            text = item.get('text', '')
+        elif isinstance(item, list):
+            text = " ".join(str(x) for x in item)
+        else:
+            text = str(item)
+        input_lines.append(f"- {text}")
     
     input_text = "\n".join(input_lines)
+    
+    print(f"\n[Debug] LLM Input:\n{input_text[:100]}...\n")
 
-    # 프롬프트 강화: 정제와 검증을 동시에 수행하도록 지시
+    # [핵심] 모델에게 "생각"할 틈을 주지 않는 예시(Few-Shot) 제공
     system_prompt = """
-    당신의 역할은 **'한국 마트 영수증 데이터 표준화 및 검수 시스템'**이다.
-    입력된 OCR 텍스트를 분석하여 **'실제 요리에 사용 가능한 식재료'**만 추출하여 정형화된 JSON으로 변환해라.
-
-    [수행 절차]
-    1. **라인 병합 (Context Merging):** - 상품명과 가격/수량이 줄바꿈으로 나뉜 경우, 문맥을 파악하여 하나의 항목으로 합치십시오.
-       - 예: "001 사과" (\n) "1,000", "1", "1000 -> {"product_name": "사과", "price": 1000}
-
-    2. **표준화 (Standardization):**
-       - 오타나 불완전한 텍스트는 **한국어 표준 식재료명**으로 변환하십시오. (예: '브로커리' -> '브로콜리')
-       - 브랜드명이 포함된 경우, 핵심 식재료명 위주로 정리해도 좋습니다.
-
-    3. **엄격한 필터링 (Strict Filtering) - 중요:**
-       - **요리에 쓸 수 없는 항목은 절대 결과에 포함하지 마십시오.**
-       - 제외 대상: '비닐봉투', '종량제봉투', '재사용봉투', '배달팁', '할인쿠폰', '카드승인내역', '멤버십포인트', '영수증', '합계'
-       
-    4. **데이터 정형화:**
-       - quantity: 없으면 기본값 1.
-       - category: [채소, 과일, 육류, 수산물, 유제품, 가공식품, 양념/오일, 음료, 기타] 중 택 1.
-
-    [출력 포맷]
-    - 설명, 인사말, 마크다운(```json) 없이 **오직 JSON 리스트**만 출력하십시오.
-
-    ```json
+    You are a receipt data extractor. Convert OCR text into a JSON list.
+    
+    [Rules]
+    1. Extract only edible ingredients. Ignore trash, discounts, and barcodes.
+    2. Convert names to standard Korean (e.g., '백설 설탕' -> '설탕').
+    3. Output ONLY valid JSON. No "Here is the JSON" or thinking text.
+    
+    [Example Interaction]
+    User: 
+    - 001 P서울우유2.3L [4,500]
+    - (주)농협유통
+    - 002 P햇양파 1망
+    - 종량제봉투 20L
+    
+    Assistant:
     [
-        {
-            "product_name": "표준화된 상품명",
-            "quantity": 1,
-            "category": "카테고리"
-        }
+      {"product_name": "우유", "quantity": 1, "unit": "개", "category": "유제품"},
+      {"product_name": "양파", "quantity": 1, "unit": "망", "category": "채소"}
     ]
-    ```
+    """.strip()
 
-    Input Data:
-    """ + f"\n{input_text}\n"
+    # 실제 사용자 입력
+    user_content = f"User:\n{input_text}\n\nAssistant:"
 
     try:
         response = ollama.chat(
-            model='midm2', 
+            model='qwen3-vl:8b', 
             messages=[
-                {'role': 'system', 'content': system_prompt}
+                {'role': 'system', 'content': system_prompt},
+                {
+                 'role': 'user',
+                 'content': user_content,
+                 'images': [image_path] if image_path else [],
+                }
             ],
+            # format='json'을 끄고 예시를 따라하게 유도하는 것이 4B 모델에겐 더 효과적임
+            # format='json', 
             options={
-                'temperature': 0.1,   # 검증까지 포함하므로 창의성을 더 낮춤
+                'temperature': 0.1, 
+                'num_predict': 1024, # 예시를 보고 바로 답하므로 토큰이 많이 필요 없음
                 'num_ctx': 4096,
+                'stop': ["User:", "Assistant:"] # 말 꼬리 잡기 방지
             },
             keep_alive=-1
         )
         
         content = response['message']['content']
-        content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL).strip()
-        content = content.replace("```json", "").replace("```", "").strip()
         
-        # JSON 파싱 (기존 로직 유지)
+        print(f"[Debug] Model Thought:\n{response}...\n")
+        # print(f"[Debug] Raw Output:\n{content[:200]}...") # 디버깅
+        
+        # JSON 추출 (Markdown 제거 및 파싱)
         restored_items = []
-        json_pattern = r'\[\s*\{.*?\}\s*\]'
-        match = re.search(json_pattern, content, re.DOTALL)
-        
-        if match:
-            try:
-                restored_items = json.loads(match.group())
-            except: pass
-        
-        if not restored_items:
-            item_pattern = r'\{\s*"product_name".*?\}'
-            raw_items = re.findall(item_pattern, content, re.DOTALL)
-            for raw_item in raw_items:
-                try:
-                    clean_json = re.sub(r',\s*\}', '}', raw_item)
-                    item_obj = json.loads(clean_json)
-                    restored_items.append(item_obj)
-                except: continue
-        
-        return restored_items
+        try:
+            # 1. 가장 넓은 범위의 대괄호 [] 찾기
+            json_match = re.search(r'\[.*\]', content, re.DOTALL)
+            if json_match:
+                json_str = json_match.group(0)
+                restored_items = json.loads(json_str)
+            else:
+                # 2. 실패 시 개별 객체 {} 찾기
+                matches = re.findall(r'\{.*?\}', content, re.DOTALL)
+                for m in matches:
+                    restored_items.append(json.loads(m))
+        except Exception:
+            pass
 
+        # 구조 정리
+        if isinstance(restored_items, dict):
+            # {"items": [...]} 형태일 경우
+            for val in restored_items.values():
+                if isinstance(val, list):
+                    restored_items = val
+                    break
+            else:
+                restored_items = [restored_items]
+
+        # 최종 정규화
+        normalized = []
+        if isinstance(restored_items, list):
+            for item in restored_items:
+                if isinstance(item, dict):
+                    p_name = str(item.get("product_name", "")).strip()
+                    if not p_name: continue
+                    
+                    normalized.append({
+                        "product_name": p_name,
+                        "quantity": float(item.get("quantity", 1) or 1),
+                        "unit": str(item.get("unit", "개")).strip(),
+                        "category": str(item.get("category", "기타")).strip(),
+                    })
+            
+        return normalized
+    
     except Exception as e:
         print(f"Error in refine_batch_items: {e}")
         return []
-
-def refine_ingredients_with_llm(ocr_data_list):
+    
+def refine_ingredients_with_llm(ocr_data_list, image_path: str = None):
     """
-    [수정됨] 메인 진입 함수 - 2차 검증 과정 삭제
     """
     if not ocr_data_list: return []
 
+    if isinstance(ocr_data_list, dict) and 'lines' in ocr_data_list:
+        ocr_data_list = ocr_data_list['lines']
     # 1. Regex 기반 1차 쓰레기 제거 (필수)
     clean_candidates = [item for item in ocr_data_list if not is_garbage_text(item)]
 
-    CHUNK_SIZE = 15
+    CHUNK_SIZE = 20
     final_items = []
     
-    # 2. 배치 처리 (LLM 호출 1회로 끝냄)
+    print(f"Processing {len(clean_candidates)} items (Filtered from {len(ocr_data_list)})...")
+    # 2. 배치 처리
     for i in range(0, len(clean_candidates), CHUNK_SIZE):
         chunk = clean_candidates[i:i + CHUNK_SIZE]
         if not chunk: continue
         
-        # 여기서 나온 결과가 곧 최종 결과가 됨
-        items = refine_batch_items(chunk)
+        # [핵심 수정] 여기서 image_path를 refine_batch_items에 전달해야 함!
+        items = refine_batch_items(chunk, image_path=image_path)
+        
         if items:
             final_items.extend(items)
             
-    # verify_and_fix_results 호출 삭제됨
     return final_items
 
 # 레시피 추천용 LLM 함수
@@ -253,7 +246,7 @@ def run_recipe_llm(user_prompt: str):
     """
 
     response = ollama.chat(
-        model="midm2",
+        model="qwen3-vl:8b",
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}

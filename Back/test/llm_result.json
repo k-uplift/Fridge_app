@@ -1,11 +1,1 @@
-{
-    "status": "success",
-    "count": 1,
-    "data": [
-        {
-            "product_name": "사과",
-            "quantity": 1,
-            "category": "과일"
-        }
-    ]
-}
+[]
