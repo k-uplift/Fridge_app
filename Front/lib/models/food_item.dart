@@ -1,12 +1,10 @@
-// 보관 위치
-enum StorageLocation {
+enum StorageLocation { // 보관 위치
   refrigerated,
   frozen,
   roomTemperature,
 }
 
-// 식재료 분류
-enum FoodCategory {
+enum FoodCategory { // 식재료 분류
   dairy,
   meat,
   vegetable,

@@ -8,7 +8,7 @@ class HistoryScreen extends StatelessWidget {
   final Function(HistoryItem) onDelete;  // 삭제 콜백
 
   const HistoryScreen({
-    super.key, 
+    super.key,
     required this.historyItems,
     required this.onRestore,
     required this.onDelete,
@@ -20,7 +20,12 @@ class HistoryScreen extends StatelessWidget {
       ..sort((a, b) => b.date.compareTo(a.date));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('히스토리')),
+      backgroundColor: Colors.grey[50],
+      appBar: AppBar(
+        title: const Text('히스토리'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
       body: sortedList.isEmpty
           ? const Center(child: Text('아직 기록이 없어요.'))
           : ListView.separated(
@@ -29,7 +34,7 @@ class HistoryScreen extends StatelessWidget {
               itemBuilder: (context, index) {
                 final item = sortedList[index];
                 final isUsed = item.action == HistoryAction.used;
-                
+
                 return ListTile(
                   leading: CircleAvatar(
                     backgroundColor: isUsed ? Colors.green[100] : Colors.red[100],
@@ -52,7 +57,6 @@ class HistoryScreen extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-
                       PopupMenuButton<String>(
                         onSelected: (value) {
                           if (value == 'restore') {

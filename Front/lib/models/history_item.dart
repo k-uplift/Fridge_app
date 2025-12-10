@@ -1,7 +1,7 @@
 import './food_item.dart';
 
 enum HistoryAction {
-  used,      // 사용완료
+  used, // 사용완료
   discarded, // 폐기
 }
 

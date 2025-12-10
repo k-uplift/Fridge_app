@@ -23,6 +23,7 @@ class FoodItemCard extends StatelessWidget {
     final today = DateTime(now.year, now.month, now.day);
     final expiryDay = DateTime(item.expiryDate.year, item.expiryDate.month, item.expiryDate.day);
     final difference = expiryDay.difference(today).inDays;
+    
     String label;
     Color chipColor;
     
@@ -47,6 +48,7 @@ class FoodItemCard extends StatelessWidget {
       label: Text(label, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
       backgroundColor: chipColor,
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+      side: BorderSide.none,
     );
   }
 
@@ -67,27 +69,20 @@ class FoodItemCard extends StatelessWidget {
       label: Text(label, style: const TextStyle(fontSize: 12)),
       backgroundColor: Colors.grey.shade200,
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+      side: BorderSide.none,
     );
   }
 
   String _getCategoryString() {
     switch (item.category) {
-      case FoodCategory.dairy:
-        return '유제품';
-      case FoodCategory.meat:
-        return '육류';
-      case FoodCategory.vegetable:
-        return '채소';
-      case FoodCategory.fruit:
-        return '과일';
-      case FoodCategory.frozen:
-        return '냉동식품';
-      case FoodCategory.seasoning:
-        return '조미료';
-      case FoodCategory.cooked:
-        return '조리음식';
-      case FoodCategory.etc:
-        return '기타';
+      case FoodCategory.dairy: return '유제품';
+      case FoodCategory.meat: return '육류';
+      case FoodCategory.vegetable: return '채소';
+      case FoodCategory.fruit: return '과일';
+      case FoodCategory.frozen: return '냉동식품';
+      case FoodCategory.seasoning: return '조미료';
+      case FoodCategory.cooked: return '조리음식';
+      case FoodCategory.etc: return '기타';
     }
   }
 
@@ -95,14 +90,17 @@ class FoodItemCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final formattedDate = DateFormat('yyyy. MM. dd.').format(item.expiryDate);
 
-    return InkWell(
-      onTap: onTap,
-      onLongPress: onLongPress,
-
-      child: Card(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    return Card(
+      color: Colors.white,
+      surfaceTintColor: Colors.white,
+      elevation: 2,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      clipBehavior: Clip.hardEdge,
+      
+      child: InkWell(
+        onTap: onTap,
+        onLongPress: onLongPress,
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Row(
@@ -127,7 +125,7 @@ class FoodItemCard extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    Text('수량: ${item.quantity.toInt()} ${item.unit}   분류: ${_getCategoryString()}'),
+                    Text('수량: ${item.quantity.toInt()}${item.unit}  |  분류: ${_getCategoryString()}'),
                     const SizedBox(height: 4),
                     Text('유통기한: $formattedDate'),
                   ],

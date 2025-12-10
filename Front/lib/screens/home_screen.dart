@@ -26,11 +26,10 @@ class _HomeScreenState extends State<HomeScreen> {
   String _searchQuery = '';
   
   SortOption _sortOption = SortOption.expiryDate;
-  bool _isAscending = true;
+  bool _isAscending = true; 
 
   final OcrService _ocrService = OcrService();
   final List<HistoryItem> _historyItems = [];
-
 
   final List<FoodItem> _mockFoodItems = [ // 샘플 데이터
     FoodItem(
@@ -55,10 +54,22 @@ class _HomeScreenState extends State<HomeScreen> {
     ),
   ];
 
-  void _confirmDeleteOrUse(FoodItem item, {bool isDecrement = false}) { // 삭제, 소진 관리
+  List<FoodCategory> get _sortedCategories {   // 카테고리 정렬(가나다순, 기타는 맨 뒤)
+    final categories = FoodCategory.values.toList();
+    categories.sort((a, b) {
+      if (a == FoodCategory.etc) return 1;
+      if (b == FoodCategory.etc) return -1;
+      return _getCategoryKoreanName(a).compareTo(_getCategoryKoreanName(b));
+    });
+    return categories;
+  }
+
+  void _confirmDeleteOrUse(FoodItem item, {bool isDecrement = false}) { // 삭제/소진 관리
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
         title: Text(isDecrement ? '수량 소진' : '항목 삭제'),
         content: const Text('어떻게 처리할까요?'),
         actions: [
@@ -79,7 +90,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Navigator.pop(ctx);
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-            child: const Text('사용완료'),
+            child: const Text('사용완료', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -129,7 +140,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _historyItems.remove(historyItem);
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('식재료를 삭제했어요.')),
+      const SnackBar(content: Text('기록을 삭제했어요.')),
     );
   }
  
@@ -184,42 +195,23 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  List<FoodItem> _getFilteredAndSortedItems() {
+  List<FoodItem> _getFilteredAndSortedItems() {  // 필터 및 정렬
     List<FoodItem> items = _mockFoodItems.where((item) {
-      if (_selectedStorageFilter != null && item.storageLocation != _selectedStorageFilter) {
-        return false;
-      }
-
-      if (_selectedCategoryFilter != null && item.category != _selectedCategoryFilter) {
-        return false;
-      }
-
-      if (_searchQuery.isNotEmpty && !item.name.contains(_searchQuery)) {
-        return false;
-      }
-
+      if (_selectedStorageFilter != null && item.storageLocation != _selectedStorageFilter) return false;
+      if (_selectedCategoryFilter != null && item.category != _selectedCategoryFilter) return false;
+      if (_searchQuery.isNotEmpty && !item.name.contains(_searchQuery)) return false;
       return true;
     }).toList();
 
     items.sort((a, b) {
       int result = 0;
       switch (_sortOption) {
-        case SortOption.expiryDate:
-          result = a.expiryDate.compareTo(b.expiryDate);
-          break;
-
-        case SortOption.name:
-          result = a.name.compareTo(b.name);
-          break;
-
-        case SortOption.quantity:
-          result = a.quantity.compareTo(b.quantity);
-          break;
+        case SortOption.expiryDate: result = a.expiryDate.compareTo(b.expiryDate); break;
+        case SortOption.name: result = a.name.compareTo(b.name); break;
+        case SortOption.quantity: result = a.quantity.compareTo(b.quantity); break;
       }
-
       return _isAscending ? result : -result;
     });
-
     return items;
   }
 
@@ -227,6 +219,7 @@ class _HomeScreenState extends State<HomeScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.white, 
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) {
         return StatefulBuilder( 
@@ -251,6 +244,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           FilterChip(
                             label: const Text('전체'),
                             selected: _selectedStorageFilter == null,
+                            backgroundColor: Colors.white,
+                            selectedColor: Colors.grey[200],
                             onSelected: (bool selected) {
                               setModalState(() => _selectedStorageFilter = null);
                               setState(() {});
@@ -259,6 +254,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           ...StorageLocation.values.map((loc) => FilterChip(
                             label: Text(_getStorageKoreanName(loc)),
                             selected: _selectedStorageFilter == loc,
+                            backgroundColor: Colors.white,
+                            selectedColor: Colors.grey[200],
                             onSelected: (bool selected) {
                               setModalState(() => _selectedStorageFilter = selected ? loc : null);
                               setState(() {}); 
@@ -275,14 +272,18 @@ class _HomeScreenState extends State<HomeScreen> {
                           FilterChip(
                             label: const Text('전체'),
                             selected: _selectedCategoryFilter == null,
+                            backgroundColor: Colors.white,
+                            selectedColor: Colors.grey[200],
                             onSelected: (bool selected) {
                               setModalState(() => _selectedCategoryFilter = null);
                               setState(() {});
                             },
                           ),
-                          ...FoodCategory.values.map((cat) => FilterChip(
+                          ..._sortedCategories.map((cat) => FilterChip(
                             label: Text(_getCategoryKoreanName(cat)),
                             selected: _selectedCategoryFilter == cat,
+                            backgroundColor: Colors.white,
+                            selectedColor: Colors.grey[200],
                             onSelected: (bool selected) {
                               setModalState(() => _selectedCategoryFilter = selected ? cat : null);
                               setState(() {});
@@ -290,7 +291,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           )),
                         ],
                       ),
-                      
                       const SizedBox(height: 30),
                       SizedBox(
                         width: double.infinity,
@@ -298,9 +298,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           onPressed: () => Navigator.pop(ctx),
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 12),
-                            backgroundColor: Colors.deepPurple.shade50,
+                            backgroundColor: const Color(0xFF0F172A),
                           ),
-                          child: const Text('확인', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          child: const Text('확인', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                         ),
                       ),
                     ],
@@ -316,13 +316,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String _getCategoryKoreanName(FoodCategory category) {
     switch (category) {
-      case FoodCategory.fruit: return '과일';
-      case FoodCategory.frozen: return '냉동식품';
       case FoodCategory.dairy: return '유제품';
       case FoodCategory.meat: return '육류';
-      case FoodCategory.cooked: return '조리음식';
-      case FoodCategory.seasoning: return '조미료';
       case FoodCategory.vegetable: return '채소';
+      case FoodCategory.fruit: return '과일';
+      case FoodCategory.frozen: return '냉동식품';
+      case FoodCategory.seasoning: return '조미료';
+      case FoodCategory.cooked: return '조리음식';
       case FoodCategory.etc: return '기타';
     }
   }
@@ -338,32 +338,27 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _pickImageAndProcess(ImageSource source) async {
     final picker = ImagePicker();
     final XFile? pickedFile = await picker.pickImage(source: source);
-
     if (pickedFile != null) {
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (ctx) => const Center(child: CircularProgressIndicator()),
       );
-
       try {
         final List<FoodItem> recognizedItems = await _ocrService.uploadImageAndGetItems(File(pickedFile.path));
         Navigator.pop(context);
-
         if (!mounted) return;
-
         final List<FoodItem>? confirmedItems = await showDialog<List<FoodItem>>(
           context: context,
           barrierDismissible: false,
           builder: (ctx) => OcrResultDialog(items: recognizedItems),
         );
-
         if (confirmedItems != null && confirmedItems.isNotEmpty) {
           setState(() {
             _mockFoodItems.addAll(confirmedItems);
           });
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${confirmedItems.length}개의 항목이 추가되었어요.')),
+            SnackBar(content: Text('${confirmedItems.length}개의 품목을 추가했어요.')),
           );
         }
       } catch (e) {
@@ -376,6 +371,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showAddItemModal(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.white,
       builder: (ctx) {
         return Container(
           padding: const EdgeInsets.all(16),
@@ -409,13 +405,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _navigateAndManageItem(BuildContext context, {FoodItem? existingItem}) async {
-    final resultItem = await Navigator.push<FoodItem>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AddItemScreen(existingItem: existingItem),
-      ),
+    final resultItem = await showDialog<FoodItem>(
+      context: context,
+      barrierDismissible: false, 
+      builder: (context) => AddItemScreen(existingItem: existingItem),
     );
-    
+
     if (resultItem != null) {
       setState(() {
         if (existingItem != null) {
@@ -434,6 +429,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showEditDeleteModal(BuildContext context, FoodItem item) {
     showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.white,
       builder: (ctx) {
         return Container(
           padding: const EdgeInsets.all(16),
@@ -468,8 +464,11 @@ class _HomeScreenState extends State<HomeScreen> {
     final filteredList = _getFilteredAndSortedItems();
 
     return Scaffold(
+      backgroundColor: Colors.grey[50], 
       appBar: AppBar(
         title: const Text('나의 냉장고'),
+        backgroundColor: Colors.grey[50],
+        surfaceTintColor: Colors.grey[50],
         leading: IconButton(
           icon: const Icon(Icons.filter_list),
           onPressed: () => _showFilterModal(context),
@@ -493,6 +492,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
           Expanded(
             child: ListView.builder(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
               itemCount: filteredList.isEmpty ? 2 : filteredList.length + 1,
               itemBuilder: (context, index) {
                 if (index == 0) {
@@ -504,6 +504,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           decoration: InputDecoration(
                             hintText: '식재료 검색',
                             prefixIcon: const Icon(Icons.search),
+                            filled: true,
+                            fillColor: Colors.white,
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                             contentPadding: const EdgeInsets.symmetric(horizontal: 10),
                             isDense: true,
@@ -515,7 +517,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           },
                         ),
                       ),
-                      
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16.0),
                         child: Row(
@@ -527,6 +528,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               style: const TextStyle(fontSize: 13, color: Colors.black87),
                               underline: Container(), 
                               isDense: true, 
+                              dropdownColor: Colors.white,
                               alignment: AlignmentDirectional.centerEnd,
                               onChanged: (SortOption? newValue) {
                                 if (newValue != null) {
@@ -546,6 +548,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               style: const TextStyle(fontSize: 13, color: Colors.black87),
                               underline: Container(),
                               isDense: true,
+                              dropdownColor: Colors.white,
                               alignment: AlignmentDirectional.centerEnd,
                               onChanged: (bool? newValue) {
                                 if (newValue != null) {
@@ -586,6 +589,8 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddItemModal(context),
+        backgroundColor: const Color(0xFF0F172A),
+        foregroundColor: Colors.white,
         child: const Icon(Icons.add),
       ),
     );

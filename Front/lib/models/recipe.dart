@@ -16,23 +16,34 @@ class Recipe {
     required this.steps,
     required this.mainIngredients,
   });
+
+  factory Recipe.fromJson(Map<String, dynamic> json) {
+    return Recipe(
+      id: json['id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      name: json['title'] ?? json['name'] ?? '이름 없는 요리',
+      durationInMinutes: json['time'] ?? 15,
+      difficulty: json['difficulty'] ?? '보통',
+      ingredients: json['ingredients'] != null 
+          ? List<String>.from(json['ingredients']) 
+          : [],
+      steps: json['steps'] != null 
+          ? List<String>.from(json['steps']) 
+          : (json['content'] != null ? [json['content']] : ['조리법 정보 없음']),
+      mainIngredients: json['ingredients'] != null 
+          ? List<String>.from(json['ingredients']) 
+          : [],
+    );
+  }
 }
 
-// 임시 레시피 데이터
-final List<Recipe> MOCK_RECIPES = [
+final List<Recipe> MOCK_RECIPES = [ // 임시 데이터
   Recipe(
     id: 'r1',
     name: '프렌치 토스트',
     durationInMinutes: 15,
     difficulty: '쉬움',
     mainIngredients: ['우유', '계란', '식빵'],
-    ingredients: [
-      '우유 100ml',
-      '계란 2개',
-      '식빵 2조각',
-      '설탕 1스푼',
-      '버터 1조각',
-    ],
+    ingredients: ['우유 100ml', '계란 2개', '식빵 2조각', '설탕 1스푼', '버터 1조각'],
     steps: [
       '계란과 우유, 설탕을 섞어 계란물을 만듭니다.',
       '식빵을 계란물에 충분히 적십니다.',
@@ -41,21 +52,13 @@ final List<Recipe> MOCK_RECIPES = [
       '설탕이나 시럽을 뿌려 완성합니다.',
     ],
   ),
-  
   Recipe(
     id: 'r2',
     name: '크림 스프',
     durationInMinutes: 30,
     difficulty: '보통',
     mainIngredients: ['우유', '감자', '양파'],
-    ingredients: [
-      '우유 200ml',
-      '감자 1개',
-      '양파 1/2개',
-      '버터 1조각',
-      '소금 약간',
-      '후추 약간',
-    ],
+    ingredients: ['우유 200ml', '감자 1개', '양파 1/2개', '버터 1조각', '소금 약간', '후추 약간'],
     steps: [
       '감자와 양파는 껍질을 벗기고 잘게 썬다.',
       '냄비에 버터를 녹이고 양파를 볶는다.',
@@ -65,19 +68,13 @@ final List<Recipe> MOCK_RECIPES = [
       '우유를 붓고 약한 불에서 끓이다가 소금, 후추로 간을 맞춘다.',
     ],
   ),
-  
   Recipe(
     id: 'r3',
     name: '계란말이',
     durationInMinutes: 10,
     difficulty: '쉬움',
     mainIngredients: ['계란'],
-    ingredients: [
-      '계란 3개',
-      '당근 약간',
-      '쪽파 약간',
-      '소금 한 꼬집',
-    ],
+    ingredients: ['계란 3개', '당근 약간', '쪽파 약간', '소금 한 꼬집'],
     steps: [
       '당근과 쪽파를 잘게 다집니다.',
       '계란을 풀고 다진 야채와 소금을 넣어 섞습니다.',
