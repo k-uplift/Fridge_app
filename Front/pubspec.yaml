@@ -11,7 +11,6 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # [기존 추가됨] 구글 폰트 패키지
   google_fonts: ^6.1.0
 
   cupertino_icons: ^1.0.8
@@ -24,33 +23,26 @@ dev_dependencies:
 
   flutter_lints: ^5.0.0
   
-  # [기존 추가됨] 앱 아이콘 생성 패키지
   flutter_launcher_icons: ^0.13.1
 
-  # [기존 추가됨] 스플래시 화면 생성 패키지
   flutter_native_splash: ^2.4.4
 
-# Flutter 관련 설정
 flutter:
   uses-material-design: true
 
-  # [수정됨] 주석(#)을 제거하여 assets 폴더를 등록했습니다!
   assets:
     - assets/icon/
 
-# [기존 설정] 앱 아이콘 설정
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
   image_path: "assets/icon/logo.png" 
   min_sdk_android: 21
 
-# [기존 설정] 스플래시 화면 설정
 flutter_native_splash:
-  color: "#FFFFFF" # 배경색 (흰색)
+  color: "#FFFFFF"
   image: "assets/icon/logo1.png"
 
-  # 안드로이드 12 이상을 위한 전용 설정 (필수!)
   android_12:
     image: "assets/icon/logo1.png"
     color: "#FFFFFF"
