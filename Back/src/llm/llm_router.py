@@ -1,46 +1,45 @@
-from fastapi import APIRouter, HTTPException
+# [llm_router.py]
+
+from fastapi import APIRouter
 from pydantic import BaseModel
-from typing import List, Union, Any
+from typing import List, Optional, Any
+# [수정] refine_batch_items 대신 refine_ingredients_with_llm 임포트
 from .llm_processor import refine_ingredients_with_llm
 
 router = APIRouter()
 
-# ---------------------------------------------------------
-# [수정] 입력 데이터 검증 모델 정의
-# ---------------------------------------------------------
-
-# 1. 개별 아이템 모델 (OCR 결과 1줄)
-class OCRItem(BaseModel):
+# 1) OCR 결과 한 장에 대한 요청 스키마
+class OCRLine(BaseModel):
+    index: int
     text: str
-    confidence: float
+    avg_confidence: Optional[float] = None
 
-# 2. 요청 바디 모델
-class LLMRequest(BaseModel):
-    # data는 '문자열 리스트'일 수도 있고(구버전), 'OCRItem 리스트'일 수도 있음(신버전)
-    # Union을 사용하여 두 형식을 모두 허용하도록 유연하게 설정
-    data: List[Union[OCRItem, str, Any]]
+class OCRLinesPayload(BaseModel):
+    line_count: int
+    lines: List[OCRLine]
+    image_path: Optional[str] = None
 
-@router.post("/refine")
-async def refine_data(request: LLMRequest):
-    try:
-        # Pydantic 모델 리스트를 일반 딕셔너리 리스트로 변환
-        # (llm_processor는 딕셔너리나 문자열을 처리할 수 있음)
-        input_data = []
-        for item in request.data:
-            if isinstance(item, OCRItem):
-                input_data.append(item.model_dump()) # 객체를 dict로 변환
-            else:
-                input_data.append(item) # 문자열이면 그대로
+# 2) LLM이 돌려줄 식재료 결과 스키마
+class IngredientItem(BaseModel):
+    product_name: str
+    category: str
+    quantity: float
+    unit: str
 
-        # LLM 프로세서 호출
-        results = refine_ingredients_with_llm(input_data)
-        
-        return {
-            "status": "success", 
-            "count": len(results),
-            "data": results
-        }
-        
-    except Exception as e:
-        print(f"❌ LLM 라우터 에러: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+@router.post("/refine", response_model=List[IngredientItem])
+async def refine_from_ocr(payload: OCRLinesPayload):
+    """
+    ocr_result.json 형식을 받아서
+    필터링 -> 배치 처리 -> LLM 변환 과정을 거쳐 식재료 리스트 반환
+    """
+    
+    # Pydantic 모델 리스트를 딕셔너리 리스트로 변환 (processor 호환용)
+    ocr_data_list = [line.model_dump() for line in payload.lines]
+
+    # [핵심 수정] 매니저 함수 호출 + image_path 전달
+    refined_items = refine_ingredients_with_llm(
+        ocr_data_list=ocr_data_list,
+        image_path=payload.image_path  # 경로 전달
+    )
+
+    return refined_items
