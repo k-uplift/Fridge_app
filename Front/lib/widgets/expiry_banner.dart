@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/food_item.dart';
+import '../services/notification_service.dart';
 
 class ExpiryBanner extends StatefulWidget {
   final List<FoodItem> items;
@@ -45,23 +46,34 @@ class _ExpiryBannerState extends State<ExpiryBanner> {
 
   @override
   void initState() {
-    super.initState();
-    _prevExpiringCount = _getExpiringItems().length;
+  super.initState();
+  final count = _getExpiringItems().length;
+  _prevExpiringCount = count;
+
+  if (count > 0) {
+    NotificationService().showExpiryNotification(count);
   }
+}
+
 
   @override
   void didUpdateWidget(ExpiryBanner oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    final currentExpiringItems = _getExpiringItems();
-    final currentCount = currentExpiringItems.length;
+  super.didUpdateWidget(oldWidget);
+  final currentExpiringItems = _getExpiringItems();
+  final currentCount = currentExpiringItems.length;
 
-    if (currentCount != _prevExpiringCount) {
-      setState(() {
-        _isVisible = true; 
-        _prevExpiringCount = currentCount; 
-      });
+  if (currentCount != _prevExpiringCount) {
+    setState(() {
+      _isVisible = true;
+      _prevExpiringCount = currentCount;
+    });
+
+    if (currentCount > 0) {
+      NotificationService().showExpiryNotification(currentCount);
     }
   }
+}
+
 
   void _showDetailDialog(List<FoodItem> expiringItems) {
     showDialog(
