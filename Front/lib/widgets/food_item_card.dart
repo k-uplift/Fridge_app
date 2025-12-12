@@ -29,7 +29,7 @@ class FoodItemCard extends StatelessWidget {
     
     if (difference < 0) {
       label = '${difference.abs()}일 지남';
-      chipColor = Colors.red.shade700;
+      chipColor = const Color(0xFF1A1A1A);
     } else if (difference == 0) {
       label = '오늘까지';
       chipColor = Colors.red.shade500;
@@ -49,27 +49,41 @@ class FoodItemCard extends StatelessWidget {
       backgroundColor: chipColor,
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
       side: BorderSide.none,
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
     );
   }
 
   Widget _buildStorageChip() {
     String label;
+    Color textColor;
+
     switch (item.storageLocation) {
       case StorageLocation.refrigerated:
         label = '냉장';
+        textColor = Colors.blue.shade700;
         break;
       case StorageLocation.frozen:
         label = '냉동';
+        textColor = Colors.indigo.shade800;
         break;
       case StorageLocation.roomTemperature:
-        label = '상온';
+        label = '실온';
+        textColor = Colors.brown.shade600;
         break;
     }
     return Chip(
-      label: Text(label, style: const TextStyle(fontSize: 12)),
+      label: Text(
+        label,
+        style: TextStyle(
+          fontSize: 12,
+          color: textColor,
+          fontWeight: FontWeight.bold
+        )
+      ),
       backgroundColor: Colors.grey.shade200,
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
       side: BorderSide.none,
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
     );
   }
 
@@ -119,9 +133,9 @@ class FoodItemCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        _buildStorageChip(),
+                        _buildStorageChip(), // 보관 장소 칩
                         const SizedBox(width: 8),
-                        _buildExpiryChip(),
+                        _buildExpiryChip(), // 유통기한 칩
                       ],
                     ),
                     const SizedBox(height: 12),

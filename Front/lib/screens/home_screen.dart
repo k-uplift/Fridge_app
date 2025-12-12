@@ -23,6 +23,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  String _fridgeNickname = '나의 냉장고';
+
   StorageLocation? _selectedStorageFilter;
   FoodCategory? _selectedCategoryFilter;
   String _searchQuery = '';
@@ -66,18 +68,98 @@ class _HomeScreenState extends State<HomeScreen> {
     return categories;
   }
 
+  void _showEditNicknameDialog() {
+    final controller = TextEditingController(text: _fridgeNickname);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('별명 설정하기', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              TextField(
+                controller: controller,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: '별명을 입력하세요',
+                  filled: true,
+                  fillColor: Colors.grey[100],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('취소', style: TextStyle(color: Colors.grey)),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (controller.text.trim().isNotEmpty) {
+                        setState(() {
+                          _fridgeNickname = controller.text.trim();
+                        });
+                      }
+                      Navigator.pop(ctx);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0F172A),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    child: const Text('저장'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   String _getParticle(String word) {
     if (word.isEmpty) return '로';
-    
     int code = word.runes.last;
     if (code < 0xAC00 || code > 0xD7A3) return '로'; 
-
     int jongseong = (code - 0xAC00) % 28;
+    if (jongseong == 0 || jongseong == 8) return '로';
+    else return '으로';
+  }
 
-    if (jongseong == 0 || jongseong == 8) { 
-      return '로';
-    } else {
-      return '으로';
+  String _getObjectParticle(String word) {
+    if (word.isEmpty) return '를';
+    int code = word.runes.last;
+    if (code < 0xAC00 || code > 0xD7A3) return '를';
+    int jongseong = (code - 0xAC00) % 28;
+    return jongseong == 0 ? '를' : '을';
+  }
+
+  Color _getDifficultyColor(String difficulty) {
+    switch (difficulty) {
+      case '쉬움':
+        return Colors.green.shade400;
+      case '보통':
+        return Colors.orange.shade400;
+      case '어려움':
+        return Colors.red.shade500;
+      default:
+        return Colors.grey;
     }
   }
 
@@ -103,7 +185,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             child: Stack(
               children: [
-                // 1. 내용물
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
                   child: Column(
@@ -121,7 +202,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '${item.name}(를) 활용한 레시피를 선택하세요.',
+                        '${item.name}${_getObjectParticle(item.name)} 활용한 레시피를 선택하세요.',
                         style: TextStyle(color: Colors.grey[600], fontSize: 14),
                         textAlign: TextAlign.center,
                       ),
@@ -157,17 +238,18 @@ class _HomeScreenState extends State<HomeScreen> {
                                               Text('${recipe.durationInMinutes}분  ',
                                                   style: TextStyle(fontSize: 12, color: Colors.grey[600])),
                                               const SizedBox(width: 8),
+                                              
                                               Container(
                                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                                 decoration: BoxDecoration(
-                                                  color: recipe.difficulty == '쉬움' ? Colors.black : Colors.grey[300],
+                                                  color: _getDifficultyColor(recipe.difficulty),
                                                   borderRadius: BorderRadius.circular(4),
                                                 ),
                                                 child: Text(
                                                   recipe.difficulty,
-                                                  style: TextStyle(
+                                                  style: const TextStyle(
                                                     fontSize: 11,
-                                                    color: recipe.difficulty == '쉬움' ? Colors.white : Colors.black,
+                                                    color: Colors.white,
                                                     fontWeight: FontWeight.bold,
                                                   ),
                                                 ),
@@ -228,32 +310,83 @@ class _HomeScreenState extends State<HomeScreen> {
   void _confirmDeleteOrUse(FoodItem item, {bool isDecrement = false}) { 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => Dialog(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
-        title: Text(isDecrement ? '수량 소진' : '항목 삭제'),
-        content: const Text('어떻게 처리할까요?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('취소', style: TextStyle(color: Colors.grey)),
-          ),
-          TextButton(
-            onPressed: () {
-              _processItemHistory(item, HistoryAction.discarded);
-              Navigator.pop(ctx);
-            },
-            child: const Text('폐기', style: TextStyle(color: Colors.red)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              _processItemHistory(item, HistoryAction.used);
-              Navigator.pop(ctx);
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-            child: const Text('사용완료', style: TextStyle(color: Colors.white)),
-          ),
-        ],
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 40, 20, 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    isDecrement ? '수량 소진' : '식재료 삭제',
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    '어떻게 처리할까요?',
+                    style: TextStyle(fontSize: 15, color: Colors.black87),
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () {
+                            _processItemHistory(item, HistoryAction.discarded);
+                            Navigator.pop(ctx);
+                          },
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            foregroundColor: Colors.red,
+                          ),
+                          child: const Text(
+                            '폐기',
+                            style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            _processItemHistory(item, HistoryAction.used);
+                            Navigator.pop(ctx);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            elevation: 0,
+                          ),
+                          child: const Text(
+                            '사용완료',
+                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            
+            Positioned(
+              right: 8,
+              top: 8,
+              child: IconButton(
+                onPressed: () => Navigator.pop(ctx),
+                icon: const Icon(Icons.close, color: Colors.grey, size: 24),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -323,7 +456,7 @@ class _HomeScreenState extends State<HomeScreen> {
   
   void _navigateToRecipeList(List<FoodItem> items) {
     if (items.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('재료가 없어요.')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('식재료를 먼저 추가해주세요.')));
       return;
     }
     Navigator.push(
@@ -492,7 +625,7 @@ class _HomeScreenState extends State<HomeScreen> {
     switch (location) {
       case StorageLocation.refrigerated: return '냉장';
       case StorageLocation.frozen: return '냉동';
-      case StorageLocation.roomTemperature: return '상온';
+      case StorageLocation.roomTemperature: return '실온';
     }
   }
 
@@ -627,7 +760,18 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[50], 
       appBar: AppBar(
-        title: const Text('나의 냉장고'),
+        title: GestureDetector(
+          onTap: _showEditNicknameDialog,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(_fridgeNickname),
+              const SizedBox(width: 6),
+              const Icon(Icons.edit, size: 16, color: Colors.grey),
+            ],
+          ),
+        ),
+        centerTitle: true,
         backgroundColor: Colors.grey[50],
         surfaceTintColor: Colors.grey[50],
         leading: IconButton(
@@ -663,7 +807,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
                         child: TextField(
                           decoration: InputDecoration(
-                            hintText: '식재료 검색',
+                            hintText: '검색',
                             prefixIcon: const Icon(Icons.search),
                             filled: true,
                             fillColor: Colors.white,
@@ -731,7 +875,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 if (filteredList.isEmpty) {
                   return const Padding(
                     padding: EdgeInsets.only(top: 50.0),
-                    child: Center(child: Text('조건에 맞는 식재료가 없어요.')),
+                    child: Center(child: Text('등록된 식재료가 없어요.')),
                   );
                 }
 

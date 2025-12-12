@@ -231,7 +231,7 @@ class _AddItemScreenState extends State<AddItemScreen> with SingleTickerProvider
     switch (location) {
       case StorageLocation.refrigerated: return '냉장';
       case StorageLocation.frozen: return '냉동';
-      case StorageLocation.roomTemperature: return '상온';
+      case StorageLocation.roomTemperature: return '실온';
     }
   }
 
@@ -264,13 +264,13 @@ class _AddItemScreenState extends State<AddItemScreen> with SingleTickerProvider
               children: [
                 const Center(
                   child: Text(
-                    '음식 정보를 입력해주세요.',
+                    '식재료 정보를 입력해주세요.',
                     style: TextStyle(color: Colors.grey, fontSize: 12),
                   ),
                 ),
                 const SizedBox(height: 20),
 
-                _buildLabel('음식 이름'),
+                _buildLabel('식재료 이름'),
                 _buildShakeableField('name', 
                   TextFormField(
                     controller: _nameController,
@@ -278,8 +278,8 @@ class _AddItemScreenState extends State<AddItemScreen> with SingleTickerProvider
                     onTap: () => _clearError('name'),
                     onChanged: (val) => _clearError('name'),
                     decoration: _inputDecoration(
-                      '음식 이름을 입력하세요.', 
-                      errorText: _errorMap['name'] == true ? '음식 이름을 입력하세요.' : null
+                      '식재료 이름을 입력하세요.', 
+                      errorText: _errorMap['name'] == true ? '식재료 이름을 입력하세요.' : null
                     ),
                   ),
                 ),
