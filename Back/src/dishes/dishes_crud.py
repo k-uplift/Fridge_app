@@ -1,5 +1,5 @@
 import sqlite3
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 from datetime import datetime
 
 # 조리된 음식 등록 
