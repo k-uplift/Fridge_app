@@ -1,164 +1,107 @@
 import cv2
 import numpy as np
-import easyocr
+from paddleocr import PaddleOCR
 import os
-import re
+import json
 
-def remove_shadows(image):
-    """
-    [핵심] 이미지의 배경(조명)을 추정하여 제거 (명암 보정)
-    """
-    dilated_img = cv2.dilate(image, np.ones((7, 7), np.uint8))
-    bg_img = cv2.medianBlur(dilated_img, 21)
-    diff_img = 255 - cv2.absdiff(image, bg_img)
-    norm_img = cv2.normalize(diff_img, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
-    return norm_img
+class AdvancedOCRProcessor:
+    def __init__(self, use_gpu=False):
+        print("Loading PaddleOCR model...")
+        self.ocr = PaddleOCR(lang='korean')   # CPU
+        self.DEBUG_MODE = True
 
-def apply_clahe(image):
-    """
-    [핵심] CLAHE: 구겨진 종이의 국소적인 어두움을 개선하여 글자 대비 극대화
-    """
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-    return clahe.apply(image)
+    def process(self, image_path: str) -> dict:
+        # 1) 이미지 로드
+        img_array = np.fromfile(image_path, np.uint8)
+        image = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
+        if image is None:
+            return {
+                "status": "failure (Image load failed)",
+                "line_count": 0,
+                "lines": []
+            }
 
-def correct_skew_robust(image):
-    """
-    [기존 유지] 글자 덩어리들의 각도를 분석하여 이미지 기울기를 보정
-    """
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
+        print("DEBUG: Starting OCR Process (PaddleOCR).")
 
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (20, 1))
-    dilated = cv2.dilate(thresh, kernel, iterations=1)
+        # 2) (일단 크롭 없이) 높이만 정규화
+        target_process_height = 1200
+        h, w = image.shape[:2]
+        if h > 0:
+            scale = target_process_height / h
+            new_w = int(w * scale)
+            image = cv2.resize(
+                image, (new_w, target_process_height),
+                interpolation=cv2.INTER_CUBIC
+            )
 
-    contours, _ = cv2.findContours(dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        # 3) PaddleOCR 실행
+        ocr_result = self.ocr.predict(image)
+        if not ocr_result:
+            return {
+                "status": "success",
+                "line_count": 0,
+                "lines": []
+            }
 
-    angles = []
-    for cnt in contours:
-        if cv2.contourArea(cnt) < 1000:
-            continue
-        rect = cv2.minAreaRect(cnt)
-        angle = rect[-1]
-        width, height = rect[1]
-        if width < height:
-            angle = 90 + angle
-        if abs(angle) < 45:
-            angles.append(angle)
+        res = ocr_result[0]
+        texts = res["rec_texts"]
+        boxes = res["rec_boxes"]   # [x1, y1, x2, y2]
+        scores = res["rec_scores"]
 
-    if len(angles) == 0:
-        return image
-    
-    median_angle = np.median(angles)
-    if abs(median_angle) < 0.5:
-        return image
+        # 4) 각 텍스트에 x/y 중심 좌표 부여
+        items = []
+        for text, box, score in zip(texts, boxes, scores):
+            x1, y1, x2, y2 = box
+            x_center = (x1 + x2) / 2.0
+            y_center = (y1 + y2) / 2.0
+            items.append({
+                "text": text,
+                "x": x_center,
+                "y": y_center,
+                "score": float(score)
+            })
 
-    print(f"🔄 감지된 기울기: {median_angle:.2f}도 -> 보정 실행")
+        if not items:
+            return {
+                "status": "success",
+                "line_count": 0,
+                "lines": []
+            }
 
-    (h, w) = image.shape[:2]
-    center = (w // 2, h // 2)
-    M = cv2.getRotationMatrix2D(center, median_angle, 1.0)
-    
-    rotated = cv2.warpAffine(
-        image, M, (w, h), 
-        flags=cv2.INTER_CUBIC, 
-        borderMode=cv2.BORDER_CONSTANT, 
-        borderValue=(255, 255, 255)
-    )
-    return rotated
+        # 5) y 기준 정렬 후, 줄 단위로 묶기
+        items.sort(key=lambda x: x["y"])
+        lines_raw = []
+        threshold = 12  # y 허용 오차
 
-def preprocess_image(image_path):
-    if not os.path.exists(image_path):
-        return None
+        for item in items:
+            if not lines_raw:
+                lines_raw.append([item])
+                continue
 
-    img_array = np.fromfile(image_path, np.uint8)
-    img = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
-    
-    try:
-        img = correct_skew_robust(img)
-    except Exception as e:
-        print(f"⚠️ 기울기 보정 건너뜀: {e}")
+            last_line = lines_raw[-1]
+            last_y = np.mean([t["y"] for t in last_line])
 
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    no_shadow = remove_shadows(gray)
-    enhanced = apply_clahe(no_shadow)
-    denoised = cv2.bilateralFilter(enhanced, 9, 75, 75)
+            if abs(item["y"] - last_y) <= threshold:
+                last_line.append(item)
+            else:
+                lines_raw.append([item])
 
-    binary = cv2.adaptiveThreshold(
-        denoised, 255, 
-        cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
-        cv2.THRESH_BINARY, 
-        25, 
-        5
-    )
-    
-    return binary
+        # 6) 줄 안에서 x 기준 정렬 후 텍스트 합치기
+        lines = []
+        for idx, line in enumerate(lines_raw, start=1):
+            line_sorted = sorted(line, key=lambda x: x["x"])
+            line_text = " ".join(t["text"] for t in line_sorted)
+            avg_score = float(np.mean([t["score"] for t in line_sorted]))
+            lines.append({
+                "index": idx,
+                "text": line_text,
+                "avg_confidence": avg_score
+            })
 
-def is_valid_text(text):
-    """
-    [수정된 필터링 규칙]
-    1. 한글이 포함되어 있으면 무조건 통과 (상품명)
-    2. 한글이 없는 경우(영어, 숫자, 특수문자 등):
-       - 숫자가 있고 그 값이 100 미만이면 통과 (수량)
-       - 그 외(큰 숫자, 순수 영어, 특수문자 등)는 모두 제거
-    """
-    text = text.strip()
-    if not text:
-        return False
+        print(f"DEBUG: PaddleOCR grouped {len(lines)} lines.")
 
-    # 1. 한글이 한 글자라도 포함되어 있다면 -> 유효한 데이터(상품명)로 간주하고 통과
-    if re.search(r'[가-힣]', text):
-        return True
-
-    # (영어, 숫자, 특수문자로만 구성된 문자열)
-    # 2. 숫자만 추출해서 확인
-    digits = re.sub(r'[^0-9]', '', text)
-    if digits:
-        try:
-            # 숫자가 존재하고, 그 값이 100 미만인 경우 (예: "1", "2", "50") -> 수량으로 보고 통과
-            if int(digits) < 100:
-                return True
-        except:
-            pass
-
-    # 3. 한글도 없고, 유효한 작은 숫자도 아니라면 (예: "13,450", "Coca-Cola", "(A)") -> 제거
-    return False
-
-def extract_receipt_data(image_array):
-    """
-    EasyOCR 실행 및 결과 필터링
-    """
-    reader = easyocr.Reader(['ko', 'en'], gpu=True) 
-    
-    results = reader.readtext(
-        image_array, 
-        detail=1, 
-        canvas_size=3840, 
-        mag_ratio=1.0,    
-        contrast_ths=0.1, 
-        adjust_contrast=0.5 
-    )
-    
-    if not results:
-        return []
-
-    # Y축 정렬
-    results.sort(key=lambda r: r[0][0][1])
-
-    filtered_data = []
-    
-    for (bbox, text, prob) in results:
-        # 1. 정확도(Confidence) 필터링: 0.1 미만 제거
-        if prob < 0.05:
-            continue
-            
-        # 2. 텍스트 내용 필터링: 특수문자/숫자만 있는 경우 (100미만 숫자 제외) 제거
-        if not is_valid_text(text):
-            continue
-            
-        # 통과한 데이터 저장
-        filtered_data.append({
-            "text": text,
-            "confidence": float(prob) # JSON 직렬화를 위해 float 형변환
-        })
-
-    return filtered_data
+        return {
+            "status": "success",
+            "line_count": len(lines),
+            "lines": lines
+        }

@@ -1,166 +1,171 @@
 {
     "status": "success",
-    "count": 40,
-    "data": [
+    "line_count": 33,
+    "lines": [
         {
-            "text": "30리",
-            "confidence": 0.8534445785551636
+            "index": 1,
+            "text": "명 수 √√√",
+            "avg_confidence": 0.5303682088851929
         },
         {
-            "text": "주매최에서",
-            "confidence": 0.28056019835200824
+            "index": 2,
+            "text": "그랜든마트",
+            "avg_confidence": 0.800707221031189
         },
         {
-            "text": "(구 매]2017-06-02 21:13",
-            "confidence": 0.7113826227865148
+            "index": 3,
+            "text": "사업자번호:210-01-74483",
+            "avg_confidence": 0.9976119995117188
         },
         {
-            "text": "-수_-+ ++",
-            "confidence": 0.0769778530731681
+            "index": 4,
+            "text": "주소:서울시 은맹구 신사동 29-1",
+            "avg_confidence": 0.9162157773971558
         },
         {
-            "text": "수구 구다",
-            "confidence": 0.23064379018289996
+            "index": 5,
+            "text": "대표:심용석 전화번호:02.309.3722",
+            "avg_confidence": 0.9834076166152954
         },
         {
-            "text": "급",
-            "confidence": 0.9732078182817396
+            "index": 6,
+            "text": "Pos:1 계산원:서인미",
+            "avg_confidence": 0.9911839962005615
         },
         {
-            "text": "액",
-            "confidence": 0.9891730753015651
+            "index": 7,
+            "text": "품명 단가 수량 금액",
+            "avg_confidence": 0.9829241037368774
         },
         {
-            "text": "단",
-            "confidence": 0.9998109430032542
+            "index": 8,
+            "text": "001참이슬1.81",
+            "avg_confidence": 0.9930256009101868
         },
         {
-            "text": "가",
-            "confidence": 0.9889605047014847
+            "index": 9,
+            "text": "8801048943302 4,300 1 4,300",
+            "avg_confidence": 0.9981846511363983
         },
         {
-            "text": "수라",
-            "confidence": 0.09629114051367586
+            "index": 10,
+            "text": "002 서을장수막걸리",
+            "avg_confidence": 0.9320209622383118
         },
         {
-            "text": "상 품 명",
-            "confidence": 0.9358967610584836
+            "index": 11,
+            "text": "8809065665108 1,100 5 5,500",
+            "avg_confidence": 0.9980379790067673
         },
         {
-            "text": "노브랜드 곳밀크우",
-            "confidence": 0.6324154617474684
+            "index": 12,
+            "text": "003펩시넥스1.25L",
+            "avg_confidence": 0.9804421067237854
         },
         {
-            "text": "2,9",
-            "confidence": 0.4277472637650615
+            "index": 13,
+            "text": "8801056032388 1,300 1 1,300",
+            "avg_confidence": 0.9943737983703613
         },
         {
-            "text": "스미트알플망복커버",
-            "confidence": 0.44732669994716
+            "index": 14,
+            "text": "004 양파(중)",
+            "avg_confidence": 0.9475600123405457
         },
         {
-            "text": "농심 포스틱 849",
-            "confidence": 0.6437754641676342
+            "index": 15,
+            "text": "*201178 2,000 1 2,000",
+            "avg_confidence": 0.9992898404598236
         },
         {
-            "text": "농심 올리브찌파거",
-            "confidence": 0.657534051734886
+            "index": 16,
+            "text": "005 새우깡노래방",
+            "avg_confidence": 0.9575401544570923
         },
         {
-            "text": "3,&0",
-            "confidence": 0.2547703981399536
+            "index": 17,
+            "text": "8801043001403 2,560 1 2,560",
+            "avg_confidence": 0.997526615858078
         },
         {
-            "text": "산물기 5Da박스",
-            "confidence": 0.21668800372021052
+            "index": 18,
+            "text": "006청과류",
+            "avg_confidence": 0.973559558391571
         },
         {
-            "text": "6,S3)",
-            "confidence": 0.3109790613433815
+            "index": 19,
+            "text": "*202001 1,540 1 1,540",
+            "avg_confidence": 0.9976545721292496
         },
         {
-            "text": "호주국물오이스터불",
-            "confidence": 0.31103606095726233
+            "index": 20,
+            "text": "007포카칩오리지널",
+            "avg_confidence": 0.9695793390274048
         },
         {
-            "text": "14",
-            "confidence": 0.9996344378095977
+            "index": 21,
+            "text": "8801117739409 960 7 960",
+            "avg_confidence": 0.9397802650928497
         },
         {
-            "text": "14",
-            "confidence": 0.9984882745575133
+            "index": 22,
+            "text": "008 상추",
+            "avg_confidence": 0.9705235362052917
         },
         {
-            "text": "오무기 꼼비네이선:",
-            "confidence": 0.5319010754225844
+            "index": 23,
+            "text": "*201027 1,040 1 1,040",
+            "avg_confidence": 0.9971695095300674
         },
         {
-            "text": "C미니드레싱골라답",
-            "confidence": 0.19506489584461778
+            "index": 24,
+            "text": "009풀/소가부침두부",
+            "avg_confidence": 0.9817953109741211
         },
         {
-            "text": "3,,",
-            "confidence": 0.5353803158988295
+            "index": 25,
+            "text": "8801114110287 1,350 2 2,700",
+            "avg_confidence": 0.9979757517576218
         },
         {
-            "text": "3",
-            "confidence": 0.9942666452598701
+            "index": 26,
+            "text": "면세합: 4,580",
+            "avg_confidence": 0.9945565760135651
         },
         {
-            "text": "4",
-            "confidence": 0.999223383111314
+            "index": 27,
+            "text": "과세합: 15,745",
+            "avg_confidence": 0.9976971447467804
         },
         {
-            "text": "29",
-            "confidence": 0.10284274340919194
+            "index": 28,
+            "text": "부가세: 1,575",
+            "avg_confidence": 0.9972424507141113
         },
         {
-            "text": "{7",
-            "confidence": 0.4304762780332674
+            "index": 29,
+            "text": "계: 21,900",
+            "avg_confidence": 0.9548623859882355
         },
         {
-            "text": "7",
-            "confidence": 0.21484409563085194
+            "index": 30,
+            "text": " o",
+            "avg_confidence": 0.4605729579925537
         },
         {
-            "text": "물",
-            "confidence": 0.9798815812219495
+            "index": 31,
+            "text": "",
+            "avg_confidence": 0.0
         },
         {
-            "text": "서",
-            "confidence": 0.20079879210419538
+            "index": 32,
+            "text": "21,900",
+            "avg_confidence": 0.9358091950416565
         },
         {
-            "text": "(+J면",
-            "confidence": 0.6343861818313599
-        },
-        {
-            "text": "41 ,",
-            "confidence": 0.8124531507492065
-        },
-        {
-            "text": "물",
-            "confidence": 0.9995631456746459
-        },
-        {
-            "text": "꿈",
-            "confidence": 0.7277040538511415
-        },
-        {
-            "text": "#품",
-            "confidence": 0.06037450916301602
-        },
-        {
-            "text": "가",
-            "confidence": 0.9999830723525207
-        },
-        {
-            "text": "7,또)",
-            "confidence": 0.3213348090648651
-        },
-        {
-            "text": "건 시디 상 금 액",
-            "confidence": 0.5023820659435493
+            "index": 33,
+            "text": "httpaidan",
+            "avg_confidence": 0.7096974849700928
         }
     ]
 }

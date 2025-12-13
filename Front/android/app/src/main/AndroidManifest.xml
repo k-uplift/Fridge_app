@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="이름을지어주세용"
+        android:label="프레시 킵"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
         <activity
