@@ -70,25 +70,35 @@ def refine_batch_items(lines: list):
 
     # [핵심] 모델에게 "생각"할 틈을 주지 않는 예시(Few-Shot) 제공
     system_prompt = """
-    You are an AI expert specializing in OCR error correction and structured data extraction from Korean receipts.
-    Your goal is to extract **food ingredients** suitable for refrigerator storage from the provided OCR text lines.
+    You are an AI expert specializing in OCR data extraction.
+    Your task is to extract **food ingredients** from the provided receipt text lines.
 
     [Primary Instructions]
-    1. **Target:** Extract ONLY food ingredients. Ignore non-food items (e.g., plastic bags, fees, headers).
-    2. **Extraction Strategy (CRITICAL):**
-       - **2-a. Keyword Spotting (Priority):** First, scan the text for any recognizable Korean food noun (e.g., '두부', '우유', '삼겹살', '라면'). 
-         - If a clear food noun is found inside the string, **EXTRACT IT IMMEDIATELY** and **STOP** analyzing the rest.
-         - Ignore prefixes, suffixes, brand names, or gibberish surrounding the keyword. (e.g., '009풀/소가부침두부' -> Contains '두부'? -> YES -> Result: '두부').
-       - **2-b. Typo Correction (Secondary):** Only if **NO** recognizable food noun is found, strictly then attempt to correct typos based on context and phonetic similarity (e.g., '면필' -> '연필').
+    1. **Process Every Line:** You must check ALL provided lines from 1 to N. Do not stop early.
+    2. **Target:** Extract ONLY food ingredients. Ignore non-food items (plastic bags, fees).
+    3. **Extraction Strategy:**
+       - Check if the line contains a food name (e.g., '두부', '우유').
+       - If a food name is found, extract only the food name and **move to the next line immediately**. (Ignore brands/prefixes).
+       - If no food name is found, try to correct typos based on context.
+       - If the line is definitely not food, skip it.
 
-3. **Formatting:** Return the result strictly as a JSON List. Do not include markdown tags or explanations.
+    4. **Formatting:** Return the result strictly as a JSON List.
 
     [Data Extraction Rules]
-    - **product_name**: Extract the core ingredient name. Remove brand names and adjectives unless necessary for identification.
-    - **quantity**: Extract the numeric quantity. If not specified, default to 1.
-    - **unit**: Use standard units: ['개' (pieces), 'g', 'kg', 'ml', 'L']. If unclear, use '개'.
-    - **category**: Choose one from: ['육류' (Meat), '어패류' (Seafood), '채소' (Vegetable), '과일' (Fruit), '유제품' (Dairy), '가공식품' (Processed), '소스' (Sauce), '음료' (Beverage), '기타' (Others)].
-
+    - **product_name**: Extract the core ingredient name. Remove brand names/adjectives (e.g., '풀무원 국산콩 두부' -> '두부').
+    - **quantity**: Numeric quantity (default 1).
+    - **unit**: ['개', 'g', 'kg', 'ml', 'L'] (default '개').
+    - **category**: Choose exactly one from the list below based on the mapping rules:
+      1. **'육류'**: Meat (Beef, Pork, Chicken).
+      2. **'어패류'**: Seafood (Fish, Shrimp, Squid).
+      3. **'채소'**: Vegetables, Mushrooms, Herbs.
+      4. **'과일'**: Fruits.
+      5. **'유제품'**: Dairy (Milk, Cheese, Yogurt) AND **Eggs (달걀)**.
+      6. **'가공식품'**: Processed Foods (Tofu/Dubu, Fish cakes, Ham, Noodles, Bread, Rice cake, Frozen food, Canned food).
+      7. **'소스'**: Sauces, Condiments, Oils (Sesame oil, Cooking oil), Spices.
+      8. **'음료'**: Beverages, Water, Juice.
+      9. **'기타'**: Others.
+      
     [Few-Shot Examples (Logic Demonstration Only)]
     *Note: These examples use non-food items to demonstrate the correction and formatting logic. Apply this same logic to FOOD ingredients in the actual task.*
 
