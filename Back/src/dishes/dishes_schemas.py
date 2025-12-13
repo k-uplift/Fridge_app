@@ -20,3 +20,11 @@ class CookedDish(BaseModel):
     expity_date: str
     memo: Optional[str] = None
     status: str
+
+# 조리 음식 수정 요청을 위한 스키마
+class DishUpdate(BaseModel):
+    name: Optional[str] = None
+    type: Optional[str] = None
+    memo: Optional[str] = None
+    manual_days: Optional[int] = None 
+    status: Optional[str] = None
