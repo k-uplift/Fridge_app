@@ -59,6 +59,19 @@ CREATE TABLE IF NOT EXISTS Expiration_Mapping (
 );
 """
 
+# 5. Cooked_Dishes 테이블 (조리된 음식 데이터)
+COOKED_DISHES_SCHEMA = """
+CREATE TABLE IF NOT EXISTS Cooked_Dishes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL, 
+    type TEXT NOT NULL,  -- '조리음식', '냉동식품', '그 외' 중 하나
+    registration_date TEXT NOT NULL DEFAULT (date('now')),
+    expiry_date TEXT NOT NULL,
+    memo TEXT,
+    status TEXT NOT NULL DEFAULT 'ACTIVE' 
+);
+"""
+
 # DB 연결
 def get_db_connection() -> sqlite3.Connection:
     conn = sqlite3.connect(DATABASE_FILE)
@@ -93,6 +106,7 @@ def initialize_database():
     cursor.execute(STORAGE_LOCATIONS_SCHEMA)
     cursor.execute(INGREDIENTS_SCHEMA)
     cursor.execute(EXPIRATION_MAPPING_SCHEMA)
+    cursor.execute(COOKED_DISHES_SCHEMA)
 
     # 기본 카테고리 / 저장 위치
     initial_categories = [

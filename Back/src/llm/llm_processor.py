@@ -78,7 +78,7 @@ def refine_batch_items(ocr_chunk):
 
     try:
         response = ollama.chat(
-            model='mistral:latest', 
+            model='midm2', 
             messages=[
                 {'role': 'system', 'content': system_prompt},
                 {'role': 'user', 'content': input_text}
