@@ -19,10 +19,20 @@ ocr_processor = AdvancedOCRProcessor(use_gpu=True)
 
 @router.post("/receipt", summary="영수증 이미지 OCR")
 async def analyze_receipt(file: UploadFile = File(...)):
-    """
-    영수증 이미지를 업로드받아 상품명과 수량을 추출합니다.
-    (AdvancedOCRProcessor 클래스 사용)
-    """
+    
+    # [추가] 1. 파일 타입(MIME Type) 검사
+    # image/jpeg, image/png 등 이미지 파일만 허용
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(
+            status_code=400, 
+            detail=f"이미지 파일만 업로드 가능합니다. (받은 타입: {file.content_type})"
+        )
+
+    # [추가] 2. 확장자 검사 (옵션)
+    # 어떤 앱은 content_type을 제대로 안 보내는 경우가 있어서 확장자도 체크하면 좋음
+    filename = file.filename.lower()
+    if not filename.endswith(('.png', '.jpg', '.jpeg', '.heic')):
+         raise HTTPException(status_code=400, detail="지원하지 않는 파일 형식입니다.")
     # 파일명 충돌 방지
     unique_filename = f"{uuid.uuid4()}_{file.filename}"
     file_path = os.path.join(UPLOAD_DIR, unique_filename)
