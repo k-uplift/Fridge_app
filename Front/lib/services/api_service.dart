@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import '../models/food_item.dart'; // FoodItem 모델 import
 
 class ApiService {
-  static const String baseUrl = "http://119.66.214.56:8000/8000/recipes/recommend"; // 서버 주소 설정
+  static const String baseUrl = "http://119.66.214.56:8000/recipes/recommend/"; // 서버 주소 설정
 
   // 식재료 리스트를 서버로 보내고, 추천된 레시피 결과를 받아옴
   Future<Map<String, dynamic>?> getRecipeRecommendation(List<FoodItem> items) async {

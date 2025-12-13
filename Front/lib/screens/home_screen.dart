@@ -10,6 +10,7 @@ import './history_screen.dart';
 import '../widgets/food_item_card.dart';
 import '../widgets/expiry_banner.dart';
 import '../services/ocr_service.dart';
+import '../services/api_service.dart';
 import './add_item_screen.dart';
 import './recipe_list_screen.dart';
 import './recipe_detail_screen.dart';
@@ -283,148 +284,160 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _showRecipeDialog(BuildContext context, FoodItem item) {
-    final List<Recipe> matchingRecipes = MOCK_RECIPES.where(
-      (recipe) => recipe.mainIngredients.any(
-        (ingredient) => item.name.contains(ingredient),
-      ),
-    ).toList();
-
+  void _showRecipeDialog(BuildContext context, FoodItem item) async { // 서버에서 추천 레시피를 받아와서 다이얼로그로 보여줌
     showDialog(
       context: context,
-      builder: (context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          backgroundColor: Colors.white,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-          child: Container(
-            height: 500,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Stack(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 24),
-                      Text(
-                        '${item.name}${_getParticle(item.name)} 만들 수 있는 요리',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '${item.name}${_getObjectParticle(item.name)} 활용한 레시피를 선택하세요.',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 20),
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
 
-                      Expanded(
-                        child: matchingRecipes.isEmpty
-                            ? const Center(child: Text("등록된 레시피가 없어요."))
-                            : ListView.builder(
-                                itemCount: matchingRecipes.length,
-                                itemBuilder: (context, index) {
-                                  final recipe = matchingRecipes[index];
-                                  return Container(
-                                    margin: const EdgeInsets.only(bottom: 12),
-                                    decoration: BoxDecoration(
-                                      border: Border.all(color: Colors.grey[300]!),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: ListTile(
-                                      contentPadding: const EdgeInsets.all(12),
-                                      title: Text(
-                                        recipe.name,
-                                        style: const TextStyle(fontWeight: FontWeight.bold),
-                                      ),
-                                      subtitle: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+    final apiResult = await ApiService().getRecipeRecommendation([item]); // 서버에 요청 (현재 선택한 재료 1개만 리스트에 담아서 보냄)
+
+    if (!mounted) return;
+    Navigator.pop(context);
+
+    if (apiResult != null) {
+      final recommendedRecipe = Recipe.fromJson(apiResult);
+      
+      if (!mounted) return; // 추천 결과 다이얼로그
+      showDialog(
+        context: context,
+        builder: (context) {
+          return Dialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            backgroundColor: Colors.white,
+            insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            child: Container(
+              height: 500,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Stack(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 24),
+                        Text(
+                          '${item.name}${_getParticle(item.name)} 만들 수 있는 요리',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'AI가 추천하는 레시피에요.',
+                          style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 20),
+                        
+                        Expanded( // 추천받은 1개의 레시피만 표시
+                          child: ListView(
+                            children: [
+                              Container(
+                                margin: const EdgeInsets.only(bottom: 12),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.grey[300]!),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: ListTile(
+                                  contentPadding: const EdgeInsets.all(12),
+                                  title: Text(
+                                    recommendedRecipe.name,
+                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  subtitle: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const SizedBox(height: 8),
+                                      Row(
                                         children: [
-                                          const SizedBox(height: 8),
-                                          Row(
-                                            children: [
-                                              Icon(Icons.access_time, size: 14, color: Colors.grey[600]),
-                                              const SizedBox(width: 4),
-                                              Text('${recipe.durationInMinutes}분  ',
-                                                  style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-                                              const SizedBox(width: 8),
-                                              
-                                              Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                                decoration: BoxDecoration(
-                                                  color: _getDifficultyColor(recipe.difficulty),
-                                                  borderRadius: BorderRadius.circular(4),
-                                                ),
-                                                child: Text(
-                                                  recipe.difficulty,
-                                                  style: const TextStyle(
-                                                    fontSize: 11,
-                                                    color: Colors.white,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
+                                          Icon(Icons.access_time, size: 14, color: Colors.grey[600]),
+                                          const SizedBox(width: 4),
+                                          Text('${recommendedRecipe.durationInMinutes}분  ',
+                                              style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                                          const SizedBox(width: 8),
+                                          
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: _getDifficultyColor(recommendedRecipe.difficulty),
+                                              borderRadius: BorderRadius.circular(4),
+                                            ),
+                                            child: Text(
+                                              recommendedRecipe.difficulty,
+                                              style: const TextStyle(
+                                                fontSize: 11,
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
                                               ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Text(
-                                            '재료: ${recipe.ingredients.take(3).join(", ")} 외 ${recipe.ingredients.length > 3 ? recipe.ingredients.length - 3 : 0}개',
-                                            style: TextStyle(color: Colors.grey[600], fontSize: 13),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
+                                            ),
                                           ),
                                         ],
                                       ),
-                                      onTap: () {
-                                        showDialog(
-                                          context: context,
-                                          builder: (context) => RecipeDetailScreen(recipe: recipe),
-                                        );
-                                      },
-                                    ),
-                                  );
-                                },
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        '재료: ${recommendedRecipe.ingredients.take(3).join(", ")}...',
+                                        style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                  onTap: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => RecipeDetailScreen(recipe: recommendedRecipe),
+                                    );
+                                  },
+                                ),
                               ),
-                      ),
-                    ],
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
 
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(20),
-                      onTap: () => Navigator.pop(context),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: const Icon(
-                          Icons.close,
-                          size: 20,
-                          color: Colors.grey,
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(20),
+                        onTap: () => Navigator.pop(context),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: const Icon(
+                            Icons.close,
+                            size: 20,
+                            color: Colors.grey,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        );
-      },
-    );
+          );
+        },
+      );
+    } else {
+      // 실패 시
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("레시피를 불러오지 못했어요. 잠시 후 다시 시도해주세요.")),
+      );
+    }
   }
 
   void _confirmDeleteOrUse(FoodItem item, {bool isDecrement = false}) { 
@@ -824,8 +837,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       backgroundColor: Colors.white,
       builder: (ctx) {
-        
-        return SafeArea( // SafeArea 추가: 하단 바에 가려지지 않도록 보호
+        return SafeArea( 
           child: Container(
             padding: const EdgeInsets.all(16),
             height: 200,
@@ -836,7 +848,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 16),
                 ListTile(
                   leading: const Icon(Icons.image),
-                  title: const Text('이미지로 입력(아직 사용 안됨)'),
+                  title: const Text('이미지로 입력'),
                   onTap: () {
                     Navigator.pop(ctx);
                     _pickImageAndProcess(ImageSource.gallery);
@@ -886,8 +898,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       backgroundColor: Colors.white,
       builder: (ctx) {
-        
-        return SafeArea( // SafeArea 추가: 하단 바에 가려지지 않도록 보호
+        return SafeArea( 
           child: Container(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -1085,7 +1096,6 @@ class _WithdrawPasswordDialogState extends State<WithdrawPasswordDialog> {
     final String? storedPw = prefs.getString(widget.userId);
 
     if (inputPw == storedPw) {
-      // 계정 삭제
       await prefs.remove(widget.userId);
       await prefs.remove('nickname_${widget.userId}');
       await prefs.remove('food_items_${widget.userId}');
@@ -1100,11 +1110,11 @@ class _WithdrawPasswordDialogState extends State<WithdrawPasswordDialog> {
       );
       
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("회원탈퇴가 완료되었어요.")),
+        const SnackBar(content: Text("회원탈퇴가 완료되었습니다.")),
       );
     } else {
       setState(() {
-        _errorText = "비밀번호가 맞지 않아요.";
+        _errorText = "비밀번호가 틀립니다.";
       });
     }
   }

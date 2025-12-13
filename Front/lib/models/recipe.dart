@@ -3,9 +3,9 @@ class Recipe {
   final String name;
   final int durationInMinutes;
   final String difficulty;
-  final List<String> ingredients;
-  final List<String> steps;
-  final List<String> mainIngredients;
+  final List<String> ingredients; // 전체 재료
+  final List<String> steps; // 조리법
+  final List<String> mainIngredients; // 주재료
 
   Recipe({
     required this.id,
@@ -17,70 +17,37 @@ class Recipe {
     required this.mainIngredients,
   });
 
-  factory Recipe.fromJson(Map<String, dynamic> json) {
+  factory Recipe.fromJson(Map<String, dynamic> json) { // 백엔드 JSON 키값에 맞춰서 데이터 변환하는 생성자
     return Recipe(
-      id: json['id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
-      name: json['title'] ?? json['name'] ?? '이름 없는 요리',
-      durationInMinutes: json['time'] ?? 15,
-      difficulty: json['difficulty'] ?? '보통',
-      ingredients: json['ingredients'] != null 
-          ? List<String>.from(json['ingredients']) 
+      id: json['id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(), // ID는 서버에서 안 주면 현재 시간으로 임시 생성
+      
+      name: json['recipe_name'] ?? json['title'] ?? '이름 없는 요리', // 백엔드 키: "recipe_name" -> 앱 변수: name
+      
+      durationInMinutes: _parseDuration(json['time_required']), // 백엔드 키: "time_required" -> 숫자만 추출해서 저장
+      
+      difficulty: json['difficulty'] ?? '보통', // 백엔드 키: "difficulty"
+      
+      ingredients: json['ingredients_needed'] != null // 백엔드 키: "ingredients_needed"
+          ? List<String>.from(json['ingredients_needed']) 
           : [],
-      steps: json['steps'] != null 
+          
+      steps: json['steps'] != null // 백엔드 키: "steps"
           ? List<String>.from(json['steps']) 
-          : (json['content'] != null ? [json['content']] : ['조리법 정보 없음']),
-      mainIngredients: json['ingredients'] != null 
-          ? List<String>.from(json['ingredients']) 
+          : [],
+          
+      mainIngredients: json['ingredients_main'] != null // 백엔드 키: "ingredients_main"
+          ? List<String>.from(json['ingredients_main']) 
           : [],
     );
   }
+
+  static int _parseDuration(dynamic timeData) {
+    if (timeData == null) return 0;
+    if (timeData is int) return timeData;
+    
+    final String timeStr = timeData.toString().replaceAll(RegExp(r'[^0-9]'), '');
+    return int.tryParse(timeStr) ?? 0;
+  }
 }
 
-final List<Recipe> MOCK_RECIPES = [ // 임시 데이터
-  Recipe(
-    id: 'r1',
-    name: '프렌치 토스트',
-    durationInMinutes: 15,
-    difficulty: '쉬움',
-    mainIngredients: ['우유', '계란', '식빵'],
-    ingredients: ['우유 100ml', '계란 2개', '식빵 2조각', '설탕 1스푼', '버터 1조각'],
-    steps: [
-      '계란과 우유, 설탕을 섞어 계란물을 만듭니다.',
-      '식빵을 계란물에 충분히 적십니다.',
-      '달궈진 팬에 버터를 녹이고 식빵을 굽습니다.',
-      '양면이 노릇해질 때까지 구워주세요.',
-      '설탕이나 시럽을 뿌려 완성합니다.',
-    ],
-  ),
-  Recipe(
-    id: 'r2',
-    name: '크림 스프',
-    durationInMinutes: 30,
-    difficulty: '보통',
-    mainIngredients: ['우유', '감자', '양파'],
-    ingredients: ['우유 200ml', '감자 1개', '양파 1/2개', '버터 1조각', '소금 약간', '후추 약간'],
-    steps: [
-      '감자와 양파는 껍질을 벗기고 잘게 썬다.',
-      '냄비에 버터를 녹이고 양파를 볶는다.',
-      '양파가 투명해지면 감자를 넣고 볶는다.',
-      '물을 약간 붓고 감자가 익을 때까지 끓인다.',
-      '믹서기로 곱게 간 후 다시 냄비에 붓는다.',
-      '우유를 붓고 약한 불에서 끓이다가 소금, 후추로 간을 맞춘다.',
-    ],
-  ),
-  Recipe(
-    id: 'r3',
-    name: '계란말이',
-    durationInMinutes: 10,
-    difficulty: '쉬움',
-    mainIngredients: ['계란'],
-    ingredients: ['계란 3개', '당근 약간', '쪽파 약간', '소금 한 꼬집'],
-    steps: [
-      '당근과 쪽파를 잘게 다집니다.',
-      '계란을 풀고 다진 야채와 소금을 넣어 섞습니다.',
-      '팬에 기름을 두르고 계란물의 1/3을 붓습니다.',
-      '계란이 반쯤 익으면 돌돌 말아 팬 한쪽으로 옮깁니다.',
-      '남은 계란물을 2번에 나눠 부으면서 반복하여 두툼하게 만듭니다.',
-    ],
-  ),
-];
+// MOCK_RECIPES 리스트는 이제 필요 없으므로 제거 -> 백엔드 서버가 역할 대신
