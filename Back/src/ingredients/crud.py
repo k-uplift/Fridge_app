@@ -49,3 +49,46 @@ def register_ingredient_to_db(
         return {"message" : f"등록 실패: {e}"}
     finally:
         conn.close()
+
+
+# 식재료 상태 업데이트
+def update_ingredient_status(conn: sqlite3.Connection, ingredient_id: int, new_status: str) -> Dict[str, Any]:
+    valid_statuses = ['ACTIVE', 'USED', 'DISCARDED']
+    new_status = new_status.lower()
+
+    if new_status not in [s.lower() for s in valid_statuses]:
+        return{"success": False, "message": f"잘못된 상태 값입니다: {new_status}"}
+    
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """
+            UPDATE Ingredients SET satus = ? WHERE id = ? 
+            """,
+            (new_status, ingredient_id)
+        )
+        conn.commit()
+
+        if cursor.rowcount == 0:
+            return {"sucess": False, "message": f"ID {ingredient_id}를 가진 식재료를 찾을 수 없습니다."}
+        
+        return {"success": True, "message": f"식재료 ID {ingredient_id}의 상태가 {new_status.upper()}로 변경되었습니다."}
+
+    except sqlite3.Error as e:
+        return {"success": False, "message": f"상태 업데이트 DB 오류: {e}"}
+    
+
+# 히스토리 목록 조회(USED or DISCARDED 상태의 식재료만 조회)
+def get_history_ingredients(conn: sqlite3.Connection) -> list[sqlite3.Row]:
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """
+            SELECT * FROM Ingredients WHERE status IN ('used', 'discarded')
+            ORDER BY id DESC            
+            """
+        )
+        return cursor.fetchall()
+    except sqlite3.Error as e:
+        print(f"히스토리 조회 DB 오류: {e}")
+        return []

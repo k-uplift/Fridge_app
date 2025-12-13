@@ -1,4 +1,4 @@
-# router.py (API 엔드포인트 분리)
+# ingredients_router.py (API 엔드포인트 분리)
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 import sqlite3
@@ -12,6 +12,7 @@ from .crud import register_ingredient_to_db, get_id_by_name
 from .expiry_calculator import calculate_expiry_date
 from .labeling import calculate_remaining_days, get_visual_labeling_data
 from .notifier import get_alert_ingredients
+from .crud import update_ingredient_status, get_history_ingredients
 
 # API 객체 생성
 router = APIRouter()
@@ -106,4 +107,10 @@ def get_expiry_alerts(
     alert_list = get_alert_ingredients(alert_days)
 
     return alert_list
+
+# PUT /ingreditns/{id}/status (식재료 상태 변경: 사용 완료, 폐기, 복구)
+@router.put("/{ingredient_id}/status", tags=["Ingredients"])
+def update_status(ingredient_id: int, new_status: str, conn: sqlite3.Connection = Depends(get_db_connection)):
+
+    result = update_ingredient_status(conn, )
 
