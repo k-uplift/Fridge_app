@@ -39,7 +39,7 @@ class _OcrResultDialogState extends State<OcrResultDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text(
-              '다음 품목들이 인식되었습니다.\n확인 후 저장 버튼을 눌러주세요.',
+              '다음 품목들을 인식했어요.\n확인 후 저장 버튼을 눌러주세요.',
               style: TextStyle(fontSize: 13, color: Colors.grey),
             ),
             const SizedBox(height: 10),

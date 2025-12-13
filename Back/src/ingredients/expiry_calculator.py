@@ -1,10 +1,9 @@
 # expiry_calculator.py (유통기한 계산
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from typing import Optional, Any
-import sqlite3
 from ..db.database import get_db_connection
-from .crud import get_id_by_name
+from .ingredients_crud import get_id_by_name
 
 def calculate_expiry_date(category_tag: str, storage_location: str, manual_days: Optional[int] = None) -> str:
 
@@ -47,3 +46,23 @@ def calculate_expiry_date(category_tag: str, storage_location: str, manual_days:
     expiry_date = today + timedelta(days=default_days)
 
     return expiry_date.strftime("%Y-%m-%d")
+
+# 조리 음식 종류에 따라 유통기한을 자동 계산
+def calculate_dish_expiry_date(dish_type: str, manual_days: Optional[int] = None) -> str:
+    if manual_days is not None and manual_days > 0:
+        default_days = manual_days
+    else:
+        dish_type = dish_type.lower()
+        if dish_type == '조리음식':
+            default_days = 3
+        elif dish_type == '냉동식품':
+            default_days = 30
+        elif dish_type == '그 외':
+            default_days = 7
+        else:
+            default_days = 7
+
+    # 오늘 날짜 + 기본 일수 계산
+    expiry_date = date.today() + timedelta(days=default_days)
+    return expiry_date.strftime("%Y-%m-%d")
+        

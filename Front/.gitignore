@@ -43,3 +43,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# IntelliJ & Android Studio 설정 무시
+.idea/
+*.iml
