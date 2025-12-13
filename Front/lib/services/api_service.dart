@@ -39,7 +39,7 @@ class ApiService {
         
         final decodedData = jsonDecode(utf8.decode(response.bodyBytes));
         
-        print("📥 받은 데이터: $decodedData");
+        print("받은 데이터: $decodedData");
         return decodedData; // 성공 시 데이터 반환
       } else {
         print("레시피 추천 실패: ${response.statusCode}");
