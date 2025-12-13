@@ -2,17 +2,18 @@
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 import sqlite3
-from typing import Any, List
+from typing import Any, List, Optional
 from datetime import datetime
 from ..db.database import get_db_connection
 
-from .schemas import IngredientRegister, Ingredient
+from .ingredients_schemas import IngredientRegister, Ingredient
+from .ingredients_crud import (
+    register_ingredient_to_db, get_id_by_name, update_ingredient_status,
+    get_history_ingredients, get_filtered_ingredients )
 
-from .crud import register_ingredient_to_db, get_id_by_name
 from .expiry_calculator import calculate_expiry_date
 from .labeling import calculate_remaining_days, get_visual_labeling_data
 from .notifier import get_alert_ingredients
-from .crud import update_ingredient_status, get_history_ingredients
 
 # API 객체 생성
 router = APIRouter()
@@ -66,25 +67,35 @@ def register_ingredient(item: IngredientRegister, conn: sqlite3.Connection = Dep
     )
 
 
-# GET/list (시각적 라벨링 포함 전체 목록 조회)
+# GET/list (식재료 목록 조회 및 필터링/정렬/검색 기능 통합)
 @router.get("/list", response_model=List[Any], tags=["Ingredients"])
-def list_ingredients(conn: sqlite3.Connection = Depends(get_db_connection)):
-    # 모든 활성화된 식재료 목록을 유통기한 임박 순으로 반환
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT id, name, expiry_date, quantity, unit, category_id, storage_location_id
-        FROM Ingredients
-        WHERE status = 'active'
-        ORDER BY expiry_date ASC
-    """)
-    rows = cursor.fetchall()
+def list_ingredients(
+        storage: Optional[str] = Query(None, description="보관 위치 이름으로 필터링"),
+        category: Optional[str] = Query(None, description="식재료 카테고리 이름으로 필터링"),
+        search: Optional[str] = Query(None, description="식재료 이름으로 검색"),
+        sort_by: str = Query('expiry_date', description="정렬 기준: 'expiry_date', 'name', 'quantity'"),
+        sort_order: str = Query('asc', description="정렬 순서: 'asc' (오름차순) 또는 'desc' (내림차순)"),
+        conn: sqlite3.Connection = Depends(get_db_connection)
+    ):
+    """
+    모든 활성화된 식재료 목록을 유통기한 임박 순으로 반환하며, 보관 위치와 카테고리로 필터링 가능합니다.
+    """
+    
+    # 1. CRUD 함수 호출 (필터링 조건 전달)
+    rows = get_filtered_ingredients(
+        conn, 
+        storage_name=storage, 
+        category_name=category,
+        search_term=search,
+        sort_by=sort_by,
+        sort_order=sort_order
+        )
 
     ingredients_list = []
 
-    # 시각적 라벨링 데이터 계산 로직 반복 적용
+    # 2. 시각적 라벨링 데이터 계산 로직 반복 적용
     for row in rows:
-        ingredient = dict(row)
+        ingredient = dict(row) 
 
         remaining_days = calculate_remaining_days(ingredient['expiry_date'])
         labeling_data = get_visual_labeling_data(remaining_days)
@@ -112,5 +123,18 @@ def get_expiry_alerts(
 @router.put("/{ingredient_id}/status", tags=["Ingredients"])
 def update_status(ingredient_id: int, new_status: str, conn: sqlite3.Connection = Depends(get_db_connection)):
 
-    result = update_ingredient_status(conn, )
+    result = update_ingredient_status(conn, ingredient_id, new_status)
 
+    if result["success"]:
+        return{"message": result["message"], "id": ingredient_id, "status": new_status.upper()}
+    else:
+        status_code = 404 if "찾을 수 없습니다" in result["message"] else 400
+        raise HTTPException(status_code=status_code, detail=result["message"])
+    
+# GET /ingredients/history (사용 완료 및 폐기 목록 조회)
+@router.get("/history", response_model=List[Any], tags=["Ingredients"])
+def list_history(conn: sqlite3.Connection = Depends(get_db_connection)):
+
+    history_rows = get_history_ingredients(conn)
+
+    return history_rows

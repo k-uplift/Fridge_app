@@ -2,7 +2,7 @@
 
 from datetime import datetime
 import sqlite3
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 from ..db.database import get_db_connection
 
 # TEXT로 ID 조회
@@ -63,14 +63,14 @@ def update_ingredient_status(conn: sqlite3.Connection, ingredient_id: int, new_s
     try:
         cursor.execute(
             """
-            UPDATE Ingredients SET satus = ? WHERE id = ? 
+            UPDATE Ingredients SET status = ? WHERE id = ? 
             """,
             (new_status, ingredient_id)
         )
         conn.commit()
 
         if cursor.rowcount == 0:
-            return {"sucess": False, "message": f"ID {ingredient_id}를 가진 식재료를 찾을 수 없습니다."}
+            return {"success": False, "message": f"ID {ingredient_id}를 가진 식재료를 찾을 수 없습니다."}
         
         return {"success": True, "message": f"식재료 ID {ingredient_id}의 상태가 {new_status.upper()}로 변경되었습니다."}
 
@@ -92,3 +92,69 @@ def get_history_ingredients(conn: sqlite3.Connection) -> list[sqlite3.Row]:
     except sqlite3.Error as e:
         print(f"히스토리 조회 DB 오류: {e}")
         return []
+
+# 보관 위치 이름 또는 카레고리 이름으로 식재료 목록을 필터링하여 조회
+def get_filtered_ingredients(
+        conn: sqlite3.Connection, 
+        storage_name: Optional[str] = None, 
+        category_name: Optional[str] = None,
+        search_term: Optional[str] = None, 
+        sort_by: str = 'expiry_date',
+        sort_order: str = 'ASC'
+    ) -> list[sqlite3.Row]:
+
+    cursor = conn.cursor()
+
+    # 쿼리 기본 구조 정의
+    base_query = """
+        SELECT 
+            I.*, 
+            S.name AS storage_name, 
+            C.name AS category_name
+        FROM Ingredients I
+        JOIN Storage_Locations S ON I.storage_location_id = S.id
+        JOIN Categories C ON I.category_id = C.id
+        WHERE I.status = 'active'
+    """
+
+    conditions = []
+    params = []
+
+    # 1. 보관 위치, 카테고리 필터링 
+    if storage_name:
+        conditions.append("S.name = ?")
+        params.append(storage_name)
+    if category_name:
+        conditions.append("C.name = ?")
+        params.append(category_name)
+
+    # 2. 검색 조건 
+    if search_term:
+        conditions.append("I.name LIKE ?")
+        params.append(f"%{search_term}%")
+
+    # 3. 조건들을 쿼리에 통합
+    if conditions:
+        base_query += " AND " + " AND ".join(conditions)
+
+    # 4. 정렬 기준 설정 및 검증
+    valid_sort_fields = {
+        'expiry_date': 'I.expiry_date',
+        'name': 'I.name',
+        'quantity': 'I.quantity',
+        'registration_date': 'I.registration_date'
+    }
+
+    field_to_sort = valid_sort_fields.get(sort_by.lower(), 'I.expiry_date')
+    order = 'ASC' if sort_order.upper() == 'ASC' else 'DESC'
+
+    # 5. 정렬 구문을 쿼리에 통합
+    base_query += f" ORDER BY {field_to_sort} {order}"
+
+    try:
+        cursor.execute(base_query, params)
+        return cursor.fetchall()
+    except sqlite3.Error as e:
+        print(f"통합 조회 DB 오류: {e}")
+        return []
+    

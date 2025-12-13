@@ -2,9 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException
 import sqlite3
 from ..db.database import get_db_connection
 from datetime import datetime
+from typing import List
 
-from .schemas import DishRegister, CookedDish
-from .crud import register_cooked_dish_to_db
+from .dishes_schemas import DishRegister, CookedDish
+from .dishes_crud import register_cooked_dish_to_db, get_all_cooked_dishes
 from ..ingredients.expiry_calculator import calculate_dish_expiry_date
 
 # API 객체 생성
@@ -43,3 +44,11 @@ def register_dish(item: DishRegister, conn: sqlite3.Connection = Depends(get_db_
         memo=item.memo,
         status='ACTIVE'
     )
+
+# GET /dishes/list (조리된 음식 목록 조회)
+@router.get("/list", response_model=List[CookedDish], summary="조리된 음식 목록 조회")
+def list_dishes(conn: sqlite3.Connection = Depends(get_db_connection)):
+
+    dishes = get_all_cooked_dishes(conn)
+
+    return [CookedDish(**dict(row)) for row in dishes]
