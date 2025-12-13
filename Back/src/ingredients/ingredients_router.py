@@ -136,5 +136,18 @@ def update_status(ingredient_id: int, new_status: str, conn: sqlite3.Connection 
 def list_history(conn: sqlite3.Connection = Depends(get_db_connection)):
 
     history_rows = get_history_ingredients(conn)
+    history_list = []
+    
+    # 2. 시각적 라벨링 데이터 계산 로직 반복 적용 (GET /list와 동일)
+    for row in history_rows:
+        ingredient = dict(row) 
+        
+        # history의 경우, status가 USED/DISCARDED이므로 remaining_days 계산은 선택적임.
+        # 그러나 기존 list와 데이터 구조 통일을 위해 계산 로직을 그대로 사용합니다.
+        remaining_days = calculate_remaining_days(ingredient['expiry_date'])
+        labeling_data = get_visual_labeling_data(remaining_days)
 
-    return history_rows
+        ingredient.update(labeling_data)
+        history_list.append(ingredient)
+
+    return history_list
