@@ -3,8 +3,20 @@ import '../models/recipe.dart';
 
 class RecipeDetailScreen extends StatelessWidget {
   final Recipe recipe;
-
   const RecipeDetailScreen({super.key, required this.recipe});
+
+  Color _getDifficultyColor(String difficulty) { // 난이도별 배경색 반환 함수
+    switch (difficulty) {
+      case '쉬움':
+        return Colors.green.shade400;
+      case '보통':
+        return Colors.orange.shade400;
+      case '어려움':
+        return Colors.red.shade500;
+      default:
+        return Colors.black87; // 기본값
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +57,7 @@ class RecipeDetailScreen extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
+              Row( // 상단 타이틀 및 뒤로가기 버튼
                 children: [
                   IconButton(
                     icon: const Icon(Icons.arrow_back, color: Colors.black87, size: 20),
@@ -68,10 +80,9 @@ class RecipeDetailScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-
               Row(
                 children: [
-                  Container(
+                  Container( // 시간 배지
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.grey[100],
@@ -87,10 +98,11 @@ class RecipeDetailScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
+                  
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.black87,
+                      color: _getDifficultyColor(recipe.difficulty), // 난이도별 색상 적용
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(

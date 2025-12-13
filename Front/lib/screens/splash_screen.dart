@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'home_screen.dart';
+import 'login_screen.dart'; // 로그인 화면 불러오기
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -42,9 +42,9 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       })
       ..addStatusListener((status) {
         if (status == AnimationStatus.completed) {
-          Navigator.pushReplacement(
+          Navigator.pushReplacement( // 로딩이 끝나면 로그인 화면으로 이동
             context,
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
           );
         }
       });

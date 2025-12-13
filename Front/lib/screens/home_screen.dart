@@ -1,6 +1,8 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/food_item.dart';
 import '../models/history_item.dart';
 import '../models/recipe.dart'; 
@@ -12,11 +14,14 @@ import './add_item_screen.dart';
 import './recipe_list_screen.dart';
 import './recipe_detail_screen.dart';
 import './ocr_result_dialog.dart';
+import './login_screen.dart'; 
 
 enum SortOption { expiryDate, name, quantity }
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final String userId; 
+
+  const HomeScreen({super.key, required this.userId});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -34,29 +39,65 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final OcrService _ocrService = OcrService();
   final List<HistoryItem> _historyItems = [];
+  
+  List<FoodItem> _mockFoodItems = []; 
 
-  final List<FoodItem> _mockFoodItems = [ // 샘플 데이터
-    FoodItem(
-      id: '1', name: '감자', quantity: 5, unit: '개',
-      category: FoodCategory.vegetable, storageLocation: StorageLocation.roomTemperature,
-      expiryDate: DateTime.now().add(const Duration(days: 2)),
-    ),
-    FoodItem(
-      id: '2', name: '우유', quantity: 1, unit: '개',
-      category: FoodCategory.dairy, storageLocation: StorageLocation.refrigerated,
-      expiryDate: DateTime.now().add(const Duration(days: 6)),
-    ),
-    FoodItem(
-      id: '3', name: '계란', quantity: 10, unit: '개',
-      category: FoodCategory.dairy, storageLocation: StorageLocation.refrigerated,
-      expiryDate: DateTime.now().subtract(const Duration(days: 6)),
-    ),
-    FoodItem(
-      id: '4', name: '냉동 만두', quantity: 1, unit: '봉지',
-      category: FoodCategory.frozen, storageLocation: StorageLocation.frozen,
-      expiryDate: DateTime.now().add(const Duration(days: 90)),
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadUserItems();
+  }
+
+  Future<void> _loadUserItems() async { // 사용자별 데이터 저장 및 불러오기
+    final prefs = await SharedPreferences.getInstance();
+    
+    setState(() {
+      _fridgeNickname = prefs.getString('nickname_${widget.userId}') ?? '나의 냉장고';
+    });
+
+    final String? jsonString = prefs.getString('food_items_${widget.userId}');
+    if (jsonString != null) {
+      final List<dynamic> jsonList = jsonDecode(jsonString);
+      setState(() {
+        _mockFoodItems = jsonList.map((jsonItem) => _fromJson(jsonItem)).toList();
+      });
+    } else {
+      setState(() {
+        _mockFoodItems = [];
+      });
+    }
+  }
+
+  Future<void> _saveUserItems() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('nickname_${widget.userId}', _fridgeNickname);
+    final String jsonString = jsonEncode(_mockFoodItems.map((item) => _toJson(item)).toList());
+    await prefs.setString('food_items_${widget.userId}', jsonString);
+  }
+
+  Map<String, dynamic> _toJson(FoodItem item) {
+    return {
+      'id': item.id,
+      'name': item.name,
+      'quantity': item.quantity,
+      'unit': item.unit,
+      'category': item.category.index,
+      'storageLocation': item.storageLocation.index,
+      'expiryDate': item.expiryDate.toIso8601String(),
+    };
+  }
+
+  FoodItem _fromJson(Map<String, dynamic> json) {
+    return FoodItem(
+      id: json['id'],
+      name: json['name'],
+      quantity: json['quantity'],
+      unit: json['unit'],
+      category: FoodCategory.values[json['category']],
+      storageLocation: StorageLocation.values[json['storageLocation']],
+      expiryDate: DateTime.parse(json['expiryDate']),
+    );
+  }
 
   List<FoodCategory> get _sortedCategories {   
     final categories = FoodCategory.values.toList();
@@ -66,6 +107,84 @@ class _HomeScreenState extends State<HomeScreen> {
       return _getCategoryKoreanName(a).compareTo(_getCategoryKoreanName(b));
     });
     return categories;
+  }
+
+  void _showLogoutDialog() { // 로그아웃 확인 팝업
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text("로그아웃", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        content: const Text("로그아웃을 할까요?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("취소", style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx); // 팝업 닫기
+              
+              Navigator.pushAndRemoveUntil( // 로그인 화면으로 이동
+                context,
+                MaterialPageRoute(builder: (context) => const LoginScreen()),
+                (route) => false,
+              );
+
+              ScaffoldMessenger.of(context).showSnackBar( // 로그아웃 알림 띄우기
+                const SnackBar(
+                  content: Text("로그아웃 되었어요."),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0F172A),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text("확인"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showWithdrawConfirmDialog() { // 회원탈퇴 1단계: 단순 확인 팝업
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text("회원탈퇴", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        content: const Text("회원탈퇴를 할까요?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("취소", style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx); // 1차 팝업 닫기
+              showDialog( // 2차 팝업(비밀번호 입력) 띄우기
+                context: context,
+                barrierDismissible: false,
+                builder: (context) => WithdrawPasswordDialog(userId: widget.userId),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0F172A),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text("확인"),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showEditNicknameDialog() {
@@ -114,6 +233,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         setState(() {
                           _fridgeNickname = controller.text.trim();
                         });
+                        _saveUserItems();
                       }
                       Navigator.pop(ctx);
                     },
@@ -327,7 +447,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 12),
                   const Text(
-                    '어떻게 처리할까요?',
+                    '어떻게 할까요?',
                     style: TextStyle(fontSize: 15, color: Colors.black87),
                   ),
                   const SizedBox(height: 24),
@@ -406,6 +526,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ));
       _mockFoodItems.remove(item);
     });
+    _saveUserItems();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('${item.name} 처리 완료 (${action == HistoryAction.used ? '사용' : '폐기'})')),
     );
@@ -424,6 +545,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ));
       _historyItems.remove(historyItem);
     });
+    _saveUserItems();
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('식재료를 다시 복구했어요.')),
     );
@@ -442,6 +564,7 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       item.quantity = item.quantity + 1;
     });
+    _saveUserItems();
   }
 
   void _decrementQuantity(FoodItem item) {
@@ -449,6 +572,7 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         item.quantity = item.quantity - 1;
       });
+      _saveUserItems();
     } else {
       _confirmDeleteOrUse(item, isDecrement: true);
     }
@@ -489,7 +613,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  List<FoodItem> _getFilteredAndSortedItems() {  // 필터 및 정렬
+  List<FoodItem> _getFilteredAndSortedItems() { 
     List<FoodItem> items = _mockFoodItems.where((item) {
       if (_selectedStorageFilter != null && item.storageLocation != _selectedStorageFilter) return false;
       if (_selectedCategoryFilter != null && item.category != _selectedCategoryFilter) return false;
@@ -519,14 +643,14 @@ class _HomeScreenState extends State<HomeScreen> {
         return StatefulBuilder( 
           builder: (BuildContext context, StateSetter setModalState) {
             return DraggableScrollableSheet(
-              initialChildSize: 0.5,
+              initialChildSize: 0.6,
               minChildSize: 0.4,
               maxChildSize: 0.8,
               expand: false,
               builder: (context, scrollController) {
                 return SingleChildScrollView(
                   controller: scrollController,
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.fromLTRB(20, 30, 20, 20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -585,17 +709,47 @@ class _HomeScreenState extends State<HomeScreen> {
                           )),
                         ],
                       ),
-                      const SizedBox(height: 30),
+                      const SizedBox(height: 40),
+                      
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: () => Navigator.pop(ctx),
                           style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
                             backgroundColor: const Color(0xFF0F172A),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
                           child: const Text('확인', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                         ),
+                      ),
+                      
+                      const SizedBox(height: 20),
+
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(ctx); 
+                              _showLogoutDialog(); 
+                            },
+                            child: const Text(
+                              '로그아웃',
+                              style: TextStyle(color: Colors.grey, fontSize: 12),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(ctx);
+                              _showWithdrawConfirmDialog(); // 회원탈퇴 확인 팝업 호출
+                            },
+                            child: const Text(
+                              '회원탈퇴',
+                              style: TextStyle(color: Colors.grey, fontSize: 12),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -651,6 +805,7 @@ class _HomeScreenState extends State<HomeScreen> {
           setState(() {
             _mockFoodItems.addAll(confirmedItems);
           });
+          _saveUserItems();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('${confirmedItems.length}개의 품목을 추가했어요.')),
           );
@@ -673,7 +828,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('음식 등록하기', style: Theme.of(context).textTheme.titleLarge),
+              Text('식재료 등록하기', style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 16),
               ListTile(
                 leading: const Icon(Icons.image),
@@ -714,6 +869,7 @@ class _HomeScreenState extends State<HomeScreen> {
           _mockFoodItems.add(resultItem);
         }
       });
+      _saveUserItems();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('식재료를 ${existingItem != null ? '수정' : '등록'}했어요.')),
       );
@@ -875,7 +1031,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 if (filteredList.isEmpty) {
                   return const Padding(
                     padding: EdgeInsets.only(top: 50.0),
-                    child: Center(child: Text('등록된 식재료가 없어요.')),
+                    child: Center(child: Text('식재료를 등록 해주세요.')),
                   );
                 }
 
@@ -898,6 +1054,99 @@ class _HomeScreenState extends State<HomeScreen> {
         foregroundColor: Colors.white,
         child: const Icon(Icons.add),
       ),
+    );
+  }
+}
+
+class WithdrawPasswordDialog extends StatefulWidget { // 회원탈퇴시 비밀번호 재확인
+  final String userId;
+  const WithdrawPasswordDialog({super.key, required this.userId});
+
+  @override
+  State<WithdrawPasswordDialog> createState() => _WithdrawPasswordDialogState();
+}
+
+class _WithdrawPasswordDialogState extends State<WithdrawPasswordDialog> {
+  final TextEditingController _pwController = TextEditingController();
+  String? _errorText;
+
+  Future<void> _handleWithdraw() async {
+    final inputPw = _pwController.text.trim();
+    final prefs = await SharedPreferences.getInstance();
+    
+    final String? storedPw = prefs.getString(widget.userId);
+
+    if (inputPw == storedPw) { // 계정 삭제
+      await prefs.remove(widget.userId);
+      await prefs.remove('nickname_${widget.userId}');
+      await prefs.remove('food_items_${widget.userId}');
+      
+      if (!mounted) return;
+      Navigator.pop(context);
+      
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        (route) => false,
+      );
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("회원탈퇴가 완료되었어요.")),
+      );
+    } else {
+      setState(() {
+        _errorText = "비밀번호가 맞지 않아요.";
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: const Text("비밀번호 확인", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text("비밀번호를 다시 입력해주세요."),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _pwController,
+            obscureText: true,
+            decoration: InputDecoration(
+              labelText: "비밀번호",
+              errorText: _errorText,
+              border: const OutlineInputBorder(),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            ),
+            onChanged: (val) {
+              if (_errorText != null) {
+                setState(() {
+                  _errorText = null;
+                });
+              }
+            },
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text("취소", style: TextStyle(color: Colors.grey)),
+        ),
+        ElevatedButton(
+          onPressed: _handleWithdraw,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+          child: const Text("탈퇴"),
+        ),
+      ],
     );
   }
 }
