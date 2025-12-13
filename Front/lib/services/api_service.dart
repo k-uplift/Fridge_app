@@ -1,16 +1,17 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../models/food_item.dart'; // FoodItem 모델 import
+import '../models/food_item.dart'; 
 
 class ApiService {
-  static const String baseUrl = "http://119.66.214.56:8000/recipes/recommend/"; // 서버 주소 설정
+  // [수정 1] baseUrl은 'IP주소:포트번호'까지만 적습니다. (뒤에 경로 삭제)
+  static const String baseUrl = "http://119.66.214.56:8000"; 
 
-  // 식재료 리스트를 서버로 보내고, 추천된 레시피 결과를 받아옴
   Future<Map<String, dynamic>?> getRecipeRecommendation(List<FoodItem> items) async {
+    // [수정 2] 여기서 상세 경로(/recipes/recommend)를 붙여줍니다.
     final url = Uri.parse('$baseUrl/recipes/recommend');
 
     try {
-      List<Map<String, dynamic>> ingredientsList = items.map((item) { // 식재료 데이터를 JSON 모양으로 변환
+      List<Map<String, dynamic>> ingredientsList = items.map((item) {
         return {
           "name": item.name,
           "quantity": item.quantity,
@@ -22,25 +23,24 @@ class ApiService {
         "ingredients": ingredientsList
       };
 
-      print("서버로 보내는 데이터: ${jsonEncode(bodyData)}");
+      print("요청 URL: $url"); // 주소가 맞는지 확인용 로그
+      print("보내는 데이터: ${jsonEncode(bodyData)}");
 
-      final response = await http.post( // POST 요청 보내기
+      final response = await http.post(
         url,
         headers: {
-          "Content-Type": "application/json", // JSON 형식으로 보낸다고 명시
+          "Content-Type": "application/json",
           "accept": "application/json",
         },
-        body: jsonEncode(bodyData), // 데이터를 JSON 문자열로 변환하여 전송
+        body: jsonEncode(bodyData),
       );
 
-
-      if (response.statusCode == 200) { // 서버 응답 처리
+      if (response.statusCode == 200) {
         print("레시피 추천 성공");
-        
+        // 한글 깨짐 방지 디코딩
         final decodedData = jsonDecode(utf8.decode(response.bodyBytes));
-        
-        print("받은 데이터: $decodedData");
-        return decodedData; // 성공 시 데이터 반환
+        print("📥 받은 데이터: $decodedData");
+        return decodedData;
       } else {
         print("레시피 추천 실패: ${response.statusCode}");
         print("에러 내용: ${response.body}");
