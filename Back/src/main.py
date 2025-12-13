@@ -1,11 +1,8 @@
 #main.py (FastAPI 실행 및 API 경로 정의)
 
 from fastapi import FastAPI
-<<<<<<< HEAD
 from fastapi.middleware.cors import CORSMiddleware # CORS 미들웨어 import
-=======
 from fastapi.concurrency import run_in_threadpool # FastAPI 내장 유틸
->>>>>>> 2a3b9926176e619385ff5c7f5d4c3a1965916b81
 from .db.database import initialize_database # DB 초기화 함수
 from contextlib import asynccontextmanager
 
@@ -19,16 +16,13 @@ from .llm.llm_router import router as llm_router
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("FastAPI 서버 시작: 데이터베이스 초기화 작업 시작")
-<<<<<<< HEAD
     initialize_database()
     print("FastAPI 서버 시작: 데이터베이스 초기화 완료")
-=======
     
     # [수정] 동기 함수를 별도 스레드에서 실행하여 메인 루프 막힘 방지
     await run_in_threadpool(initialize_database)
     
     print("FastAPI 서버 시작: 초기화 완료!")
->>>>>>> 2a3b9926176e619385ff5c7f5d4c3a1965916b81
     yield
     print("FastAPI 서버 종료")
 
@@ -60,13 +54,10 @@ app.include_router(ocr_router, prefix="/ocr", tags=["OCR"])
 # 레시피 관련 라우터
 app.include_router(recipes_router, prefix="/recipes", tags=["Recipes"])
 # 조리된 음식 관련 라우터
-<<<<<<< HEAD
 app.include_router(dishes_router, prefix="/dishes", tags=["Cooked Dishes"])
 # LLM 관련 라우터
 app.include_router(llm_router, prefix="/llm", tags=["AI Processing"])
-=======
 app.include_router(dishes_router)
 
 
 #app.include_router(llm_internal_router, prefix="/llm", tags=["Internal"])
->>>>>>> 2a3b9926176e619385ff5c7f5d4c3a1965916b81
