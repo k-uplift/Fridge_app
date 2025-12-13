@@ -38,11 +38,11 @@ def test_recipe_recommendation_real():
     # 냉장고에 이런 재료가 있다고 가정하고 서버에 보냅니다.
     request_payload = {
         "ingredients": [
-            {"name": "돼지고기 목살", "quantity": 300, "unit": "g"},
-            {"name": "묵은지", "quantity": "반", "unit": "개"},
-            {"name": "두부", "quantity": 1, "unit": "개"},
-            {"name": "양파", "quantity": 1, "unit": "개"},
-            {"name": "대파", "quantity": 1, "unit": "개"}
+            {"name": "소주", "quantity": 5, "unit": "개"},
+            {"name": "참치캔", "quantity": "6", "unit": "개"},
+            {"name": "두부", "quantity": 2, "unit": "개"},
+            {"name": "소고기 안심", "quantity": 300, "unit": "g"},
+            {"name": "아이스크림", "quantity": 1, "unit": "개"}
         ]
     }
     

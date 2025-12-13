@@ -17,7 +17,7 @@ class CookedDish(BaseModel):
     name: str
     type: str
     registration_date: str
-    expity_date: str
+    expiry_date: str
     memo: Optional[str] = None
     status: str
 
