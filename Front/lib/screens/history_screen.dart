@@ -61,7 +61,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               children: [
                 _buildFilterChip('전체', _FilterType.all),
                 const SizedBox(width: 8),
-                _buildFilterChip('사용 완료', _FilterType.used),
+                _buildFilterChip('사용완료', _FilterType.used),
                 const SizedBox(width: 8),
                 _buildFilterChip('폐기', _FilterType.discarded),
               ],
@@ -175,7 +175,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  // 필터 칩 위젯 (디자인: 홈 화면 스타일과 유사하게)
   Widget _buildFilterChip(String label, _FilterType type) {
     final isSelected = _currentFilter == type;
     
@@ -188,7 +187,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF0F172A) : Colors.white, // 선택되면 남색, 아니면 흰색
+          color: isSelected ? const Color(0xFF0F172A) : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected ? const Color(0xFF0F172A) : Colors.grey[300]!,

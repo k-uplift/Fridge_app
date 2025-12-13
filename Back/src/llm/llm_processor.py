@@ -39,8 +39,8 @@ def is_garbage_text(item):
     # 4. 불용어(Garbage Keywords) 필터링
     # (헤더나 명백한 쓰레기 단어 삭제)
     GARBAGE_KEYWORDS = [
-        "결제", "카드", "면세", "부가세", "포인트", "주소", "TEL", "대표", 
-        "할인", "영수증", "Total", "내역", "배달", "반품", "교환", "가맹점", 
+        "결제", "카드", "부가세", "포인트", "주소", "TEL", "대표", 
+        "영수증", "Total", "내역", "배달", "반품", "교환", "가맹점", 
         "승인", "매출", "사업자", "품목", "봉투", "쇼핑백", "종량제", "비닐", "Trash",
         "POINT", "Point", "적립", "사용", "소멸", "잔여", "누리", "에누리",
         "PL", "S-OIL", "L.POINT", "CASH", "CARD", "쿠폰", "부가세", "바코드", "회원", "포인트"
@@ -81,14 +81,14 @@ def refine_batch_items(lines: list):
          - Ignore prefixes, suffixes, brand names, or gibberish surrounding the keyword. (e.g., '009풀/소가부침두부' -> Contains '두부'? -> YES -> Result: '두부').
        - **2-b. Typo Correction (Secondary):** Only if **NO** recognizable food noun is found, strictly then attempt to correct typos based on context and phonetic similarity (e.g., '면필' -> '연필').
 
-3. **Formatting:** Return the result strictly as a JSON List. Do not include markdown tags or explanations.
+    3. **Formatting:** Return the result strictly as a JSON List. Do not include markdown tags or explanations.
 
     [Data Extraction Rules]
     - **product_name**: Extract the core ingredient name. Remove brand names and adjectives unless necessary for identification.
     - **quantity**: Extract the numeric quantity. If not specified, default to 1.
     - **unit**: Use standard units: ['개' (pieces), 'g', 'kg', 'ml', 'L']. If unclear, use '개'.
-    - **category**: Choose one from: ['육류' (Meat), '어패류' (Seafood), '채소' (Vegetable), '과일' (Fruit), '유제품' (Dairy), '가공식품' (Processed), '소스' (Sauce), '음료' (Beverage), '기타' (Others)].
-
+    - **category**: Choose exactly one from: 
+        ['채소', '과일', '육류', '수산물', '유제품/두부/알류', '면/빵/떡', '가공/냉동식품', '양념/오일', '음료', '기타'].
     [Few-Shot Examples (Logic Demonstration Only)]
     *Note: These examples use non-food items to demonstrate the correction and formatting logic. Apply this same logic to FOOD ingredients in the actual task.*
 

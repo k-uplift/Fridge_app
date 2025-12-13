@@ -3,17 +3,166 @@
 # 0. 시작하기
 
 # 1. 프로젝트 개요
-
+- 프로젝트 이름 : 프레시 킵 (Fresh Keep)
+- 프로젝트 설명 : 효율적인 냉장고 식재료 관리 어플리케이션
+<br><br><br>
 # 2. 팀원 및 팀 소개
+<table width="100%">
+    <thead>
+        <tr>
+            <th width="25%">기세웅</th>
+            <th width="25%">김혜성</th>
+            <th width="25%">박준서</th>
+            <th width="25%">배선아</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td align="center">BE</td>
+            <td align="center">FE</td>
+            <td align="center">FE</td>
+            <td align="center">BE</td>
+        </tr>
+        <tr>
+            <td align="center">
+                <a href="[기세웅 GitHub URL]">GitHub</a>
+            </td>
+            <td align="center">
+                <a href="[김혜성 GitHub URL]">GitHub</a>
+            </td>
+            <td align="center">
+                <a href="[박준서 GitHub URL]">GitHub</a>
+            </td>
+            <td align="center">
+                <a href="[배선아 GitHub URL]">GitHub</a>
+            </td>
+        </tr>
+    </tbody>
+</table>
+<br><br><br>
 
 # 3. 주요 기능 소개
+**🥑 식재료 관리 (Ingredients)**
+- **통합 조회 및 필터링** : 보관 위치(냉장, 냉동, 상온) 및 카테고리별로 식재료 목록을 필터링합니다.
+- **검색 및 정렬** : 식재료 이름으로 검색하고, 유통기한 임박순, 이름순, 수량순 등으로 정렬합니다.
+- **유통기한 알림** : 유통기한이 임박한 식재료 목록을 따로 조회하여 낭비르 방지합니다.
+- **상태 관리** : 식재료를 사용 완료(USED) 또는 폐기(DISCARDED) 상태로 변경하며 히스토리 목록을 제공합니다.
+<br>
+  
+**📝 AI/OCR 처리 (AI/OCR Processing)**
+- **고도화된 OCR** : "PaddleOCR (한국어 모델)"을 사용하여 영수증 이미지에서 텍스트를 고속으로 추출합니다.
+- **이미지 전처리** : cv2.resize를 통한 높이 정규화 및 numpy 기반 이미지 처리로 인식률을 향상합니다.
+- **줄 단위 그룹화** : OCR 결과의 좌표(x,y)를 기반으로 텍스트를 줄 단위로 정렬 및 그룹화하여 상품 목록을 정확히 분리합니다.
+<br>
+  
+**🧠 LLM 기반 데이터 정제 및 레시피 추천 (AI Processing)**
+- **1차 노이즈 제거** : 정규식(re.search(r'[가-힣0-9a-zA-Z]')) 및 불용어 필터링을 통해 OCR 결과의 헤더/쓰레기 텍스트를 선행적으로 제거합니다.
+- **구조화된 데이터 추출**
+  - **Ollama (deepseek-r1:8b)** 모델을 사용하여 잔여 텍스트에서 핵심 식재료 명, 수량, 단위, 카테고리를 정확히 추출합니다.
+  - **Keyword Spotting** 전략을 적용하여 브랜드명이나 오타를 무시하고 핵심 재료명만 추출하도록 프롬프트에 명시했습니다.
+- **레시피 추천** : 보유 재료 목록(유통기한 정보 포함)을 기반으로 JSON 형식의 구조화된 레시피를 생성하여 제공합니다.
+<br><br><br>
 
 # 4. 작업 및 역할 분담
 
+<table width="100%">
+    <thead>
+        <tr>
+            <th width="25%">이름</th>
+            <th width="75%">담당 역할</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td align="center">기세웅</td>
+            <td>
+                <ul>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td align="center">김혜성</td>
+            <td>
+                <ul>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                </ul>
+            </td>
+        </tr>
+      <tr>
+            <td align="center">박준서</td>
+            <td>
+                <ul>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                </ul>
+            </td>
+        </tr>
+      <tr>
+            <td align="center">배선아</td>
+            <td>
+                <ul>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                </ul>
+            </td>
+        </tr>
+        </tbody>
+</table>
+<br><br><br>
+
 # 5. 기술 스택
+## 5.1 Language
+## 5.2 Backend
+- Framework: FastAPI
+- Database: SQLite3
+- AI/LM:
+  - OCR : PaddleOCR
+  - LLM Runtime : Ollama
+  - LLM Model: deepseek-r1:8b
+  - Image Processin: OpenCV(cv2) 및 Numpy
+## 5.3 Frontend
+## 5.4 Cooperation
+- Version Control: Git, GtiHub
+- API Testing: Postman
+<br><br><br>
 
 # 6. 프로젝트 구조
 
-# 7. 개발 워크플로우
+```
+Fridge_app/
+ ┣ Back/                            # [백엔드] FastAPI 서버
+ ┃   ┣ src/
+ ┃     ┣ db/                        # DB 초기화 및 연결 로직
+ ┃     ┣ dishes/                    # 조리된 음식 CRUD 및 라우터
+ ┃     ┣ ingredients/               # 식재료 CRUD, 라우터, 스키마
+ ┃     ┣ llm/                       # LLM 데이터 정제 로직 및 라우터
+ ┃     ┣ ocr/                       # OCR 이미지 처리 및 라우터
+ ┃     ┣ recipes/                   # 레시피 관련 라우터 
+ ┃     ┗ main.py                    # FastAPI 앱 엔트리 포인트
+ ┣ Front/                           # [프론트엔드] Flutter 애플리케이션
+ ┃   ┣ android/                     # 안드로이드 플랫폼 관련 파일
+ ┃   ┣ ios/                         # iOS 플랫폼 관련 파일
+ ┃   ┣ lib/                         # 핵심 Dart 코드
+ ┃     ┗ main.dart                  # 엔트리 포인트
+ ┃   ┣ assets/                      # 이미지, 폰트, 리소스 파일
+ ┃   ┣ test/                        # 단위 테스트 및 위젯 테스트 코드
+ ┃   ┣ pubspec.yaml                 # Dart/Flutter 종속성 및 설정 파일
+ ┃   ┗ README.md                    # Flutter 프로젝트 기본 README
+ ┣ .gitignore                       # Git 무시 파일 목록
+ ┗ README.md                        # 프로젝트 개요 및 사용법
 
+```
+<br><br><br>
+
+# 7. 개발 워크플로우
+## 브랜치 전략 (Branch Strategy)
+
+<br><br><br>
 # 8. 설치 패키지 다운로드 주소

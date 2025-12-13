@@ -24,7 +24,7 @@ class _OcrResultDialogState extends State<OcrResultDialog> {
     switch (location) {
       case StorageLocation.refrigerated: return '냉장';
       case StorageLocation.frozen: return '냉동';
-      case StorageLocation.roomTemperature: return '상온';
+      case StorageLocation.roomTemperature: return '실온';
     }
   }
 
