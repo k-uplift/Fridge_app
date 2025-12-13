@@ -284,14 +284,14 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _showRecipeDialog(BuildContext context, FoodItem item) async { // 서버에서 추천 레시피를 받아와서 다이얼로그로 보여줌
+  void _showRecipeDialog(BuildContext context, FoodItem item) async { 
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => const Center(child: CircularProgressIndicator()),
     );
 
-    final apiResult = await ApiService().getRecipeRecommendation([item]); // 서버에 요청 (현재 선택한 재료 1개만 리스트에 담아서 보냄)
+    final apiResult = await ApiService().getRecipeRecommendation([item]); 
 
     if (!mounted) return;
     Navigator.pop(context);
@@ -299,7 +299,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (apiResult != null) {
       final recommendedRecipe = Recipe.fromJson(apiResult);
       
-      if (!mounted) return; // 추천 결과 다이얼로그
+      if (!mounted) return; 
       showDialog(
         context: context,
         builder: (context) {
@@ -338,7 +338,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         const SizedBox(height: 20),
                         
-                        Expanded( // 추천받은 1개의 레시피만 표시
+                        Expanded( 
                           child: ListView(
                             children: [
                               Container(
@@ -432,7 +432,6 @@ class _HomeScreenState extends State<HomeScreen> {
         },
       );
     } else {
-      // 실패 시
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("레시피를 불러오지 못했어요. 잠시 후 다시 시도해주세요.")),
@@ -800,7 +799,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _pickImageAndProcess(ImageSource source) async {
     final picker = ImagePicker();
-    final XFile? pickedFile = await picker.pickImage(source: source);
+    
+    final XFile? pickedFile = await picker.pickImage( // 이미지 크기와 화질을 줄여서 메모리 부족(OOM) 방지
+      source: source,
+      maxWidth: 600,  
+      maxHeight: 600, 
+      imageQuality: 30, 
+    );
+
     if (pickedFile != null) {
       showDialog(
         context: context,
@@ -1110,11 +1116,11 @@ class _WithdrawPasswordDialogState extends State<WithdrawPasswordDialog> {
       );
       
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("회원탈퇴가 완료되었습니다.")),
+        const SnackBar(content: Text("회원탈퇴가 완료되었어요.")),
       );
     } else {
       setState(() {
-        _errorText = "비밀번호가 틀립니다.";
+        _errorText = "비밀번호가 맞지 않아요.";
       });
     }
   }

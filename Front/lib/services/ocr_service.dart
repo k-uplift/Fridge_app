@@ -1,50 +1,60 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart'; 
 import '../models/food_item.dart';
 
 class OcrService {
-  static const String requestUrl = "http://119.66.214.56:8000/ocr/receipt"; // OCR 서버 주소
+  static const String requestUrl = "http://119.66.214.56:8000/ocr/receipt"; 
 
-  Future<List<FoodItem>> uploadImageAndGetItems(File imageFile) async { // 서버로 이미지를 전송, 보정된 품목 리스트를 받아오는 함수
+  Future<List<FoodItem>> uploadImageAndGetItems(File imageFile) async {
     final url = Uri.parse(requestUrl);
 
     try {
       var request = http.MultipartRequest('POST', url);
-    
-      request.files.add(await http.MultipartFile.fromPath( // 파일 첨부 (키값: "file")
+      
+      String extension = imageFile.path.split('.').last.toLowerCase();
+      MediaType contentType;
+      if (extension == 'png') {
+        contentType = MediaType('image', 'png');
+      } else {
+        contentType = MediaType('image', 'jpeg');
+      }
+
+      request.files.add(await http.MultipartFile.fromPath(
         'file', 
         imageFile.path,
+        contentType: contentType,
       ));
 
-      print("OCR 요청 시작: $url");
+      print("OCR 요청 시작 (POST): $url");
 
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
 
       if (response.statusCode == 200) {
-        print("인식 성공!");
+        print("OCR 인식 성공!");
+        
         final decodedData = jsonDecode(utf8.decode(response.bodyBytes));
         print("받은 데이터: $decodedData");
 
-        // 받은 JSON 데이터를 앱의 FoodItem 리스트로 변환
-        // 서버가 주는 구조에 따라 리스트가 바로 오거나, 'items' 키 안에 있을 수 있음
-        // 일단 리스트라고 가정하고, 만약 Map이라면 'items' 키를 찾도록 처리
         List<dynamic> listData = [];
-        if (decodedData is List) {
+        
+        if (decodedData is Map && decodedData.containsKey('data')) {
+          listData = decodedData['data'];
+        } else if (decodedData is List) {
           listData = decodedData;
         } else if (decodedData is Map && decodedData.containsKey('items')) {
           listData = decodedData['items'];
         } else {
-          
-          print("데이터 형식에 차이가 있어요.: $decodedData"); // 형식이 다를 경우 빈 리스트 반환
+          print("데이터 형식이 예상과 다릅니다: $decodedData");
           return [];
         }
         
         return listData.map((json) => _mapJsonToFoodItem(json)).toList();
       } else {
-        print("인식 실패: ${response.statusCode}");
-        print("오류: ${response.body}");
+        print("OCR 실패: ${response.statusCode}");
+        print("에러 내용: ${response.body}");
         return [];
       }
     } catch (e) {
@@ -55,12 +65,13 @@ class OcrService {
 
   FoodItem _mapJsonToFoodItem(Map<String, dynamic> json) {
     return FoodItem(
-      id: DateTime.now().millisecondsSinceEpoch.toString() + (json['name'] ?? ''), // 고유 ID 생성
-      name: json['name'] ?? '알 수 없음',
+      id: DateTime.now().millisecondsSinceEpoch.toString() + (json['product_name'] ?? json['name'] ?? ''), 
       
-      quantity: (json['quantity'] is int || json['quantity'] is double) 
-          ? json['quantity'].toInt() 
-          : int.tryParse(json['quantity']?.toString() ?? '1') ?? 1,
+      name: json['product_name'] ?? json['name'] ?? '알 수 없음',
+      
+      quantity: (json['quantity'] is num) 
+          ? (json['quantity'] as num).toDouble() 
+          : 1.0,
       
       unit: json['unit'] ?? '개',
       
@@ -91,7 +102,7 @@ class OcrService {
     switch (storageName) {
       case '냉동': return StorageLocation.frozen;
       case '실온': return StorageLocation.roomTemperature;
-      default: return StorageLocation.refrigerated;
+      default: return StorageLocation.refrigerated; 
     }
   }
 }

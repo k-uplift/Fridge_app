@@ -83,7 +83,7 @@ class _OcrResultDialogState extends State<OcrResultDialog> {
           onPressed: () {
             Navigator.pop(context, _items); // 사용자가 확인한 최종 리스트 반환
           },
-          child: const Text('모두 저장'),
+          child: const Text('저장'),
         ),
       ],
     );
