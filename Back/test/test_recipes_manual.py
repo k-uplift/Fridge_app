@@ -67,9 +67,9 @@ def test_recipe_recommendation_real():
             
             # 결과 미리보기
             print("\n--- LLM이 추천한 레시피 ---")
-            print(f"🥘 요리명: {result_data.get('recipe_name')}")
-            print(f"⏱️ 소요시간: {result_data.get('time_required')}")
-            print(f"📊 난이도: {result_data.get('difficulty')}")
+            print(f"요리명: {result_data.get('recipe_name')}")
+            print(f"소요시간: {result_data.get('time_required')}")
+            print(f"난이도: {result_data.get('difficulty')}")
             print("\n[필요한 재료]")
             print(f"보유 재료: {', '.join(result_data.get('ingredients_main', []))}")
             print(f"추가 필요: {', '.join(result_data.get('ingredients_needed', []))}")
