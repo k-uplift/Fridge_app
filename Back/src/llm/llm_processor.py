@@ -267,25 +267,43 @@ def run_recipe_llm(user_prompt: str):
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}
         ],
-        options={"temperature": 0.4, "num_ctx": 4096},
+        options={"temperature": 0.3, "num_ctx": 4096},
         keep_alive=0
     )
 
     content = response["message"]["content"]
     content = content.replace("```json", "").replace("```", "").strip()
 
+    # 1. JSON 파싱 시도
+    data = None
     try:
-        return json.loads(content)
+        # 1-1. 순수 JSON 파싱 시도
+        data = json.loads(content)
     except:
         try:
+            # 1-2. 실패 시 정규식으로 JSON 부분만 추출 시도
             pattern = r'\{.*\}'
             match = re.search(pattern, content, re.DOTALL)
             if match:
-                return json.loads(match.group(0))
-            
+                data = json.loads(match.group(0))
+            else:
+                raise ValueError("JSON 패턴을 찾을 수 없음")
         except:
-            return{
+            # 1-3. 모든 파싱 실패 시 에러 반환
+            return {
                 "recipe_name": "오류",
                 "steps": ["LLM 응답 파싱 실패"],
                 "ingredients_needed": []
             }
+
+    # 2. [공통 로직] steps 번호 제거 (파싱 성공한 data에 대해 수행)
+    if "steps" in data and isinstance(data["steps"], list):
+        cleaned_steps = []
+        for step in data["steps"]:
+            # "1. 끓인다", "1) 끓인다" -> "끓인다" 제거
+            clean_step = re.sub(r'^\d+[\.\)]\s*', '', str(step))
+            cleaned_steps.append(clean_step)
+        data["steps"] = cleaned_steps
+
+    # 3. 최종 반환
+    return data

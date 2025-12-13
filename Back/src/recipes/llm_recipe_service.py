@@ -1,9 +1,8 @@
-# llm_recipe_service.py (LLM과 통신하여 레시피를 받는 로직)
+# llm_recipe_service.py
 
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from ..db.database import get_db_connection
 from ..llm.llm_processor import run_recipe_llm as recipe_processor
-
 
 # DB - 사용자 식재료 조회
 def get_user_ingredients_list() -> List[str]:
@@ -73,10 +72,19 @@ def recommend_recipe_from_llm(ingredients_list: List[str]) -> Dict[str, Any]:
         }
     
 # 외부 진입점 - 최종 레시피 추천
-def get_final_recipe_recommendation() -> Dict[str, Any]:
-    # 1. DB에서 사용자 보유 식재료 조회
-    # 2. LLM 호출하여 레시피 추천
-    ingredients = get_user_ingredients_list()
-    return recommend_recipe_from_llm(ingredients)
+def get_final_recipe_recommendation(ingredients_list: Optional[List[str]] = None) -> Dict[str, Any]:
+    """
+    ingredients_list가 주어지면 그걸 쓰고, 
+    없으면(None) DB에서 조회해서 추천한다.
+    """
+    
+    # 1. 인자로 받은 리스트가 없으면 DB에서 조회 (기존 로직 하위 호환)
+    if not ingredients_list:
+        print("[Service] 입력된 재료가 없어 DB에서 조회합니다.")
+        ingredients_list = get_user_ingredients_list()
+    else:
+        print(f"[Service] 앱에서 전달받은 재료 {len(ingredients_list)}개를 사용합니다.")
 
+    # 2. LLM 호출
+    return recommend_recipe_from_llm(ingredients_list)
     
