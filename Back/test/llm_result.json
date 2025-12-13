@@ -8,14 +8,14 @@
     {
         "product_name": "막걸리",
         "category": "음료",
-        "quantity": 5.0,
+        "quantity": 1.0,
         "unit": "개"
     },
     {
-        "product_name": "펩시넥스",
+        "product_name": "펩시",
         "category": "음료",
         "quantity": 1.0,
-        "unit": "L"
+        "unit": "개"
     },
     {
         "product_name": "양파",
@@ -25,14 +25,14 @@
     },
     {
         "product_name": "새우깡",
-        "category": "가공식품",
+        "category": "면/빵/떡",
         "quantity": 1.0,
         "unit": "개"
     },
     {
         "product_name": "포카칩",
-        "category": "가공식품",
-        "quantity": 7.0,
+        "category": "면/빵/떡",
+        "quantity": 1.0,
         "unit": "개"
     },
     {
@@ -43,7 +43,7 @@
     },
     {
         "product_name": "두부",
-        "category": "가공식품",
+        "category": "유제품/두부/알류",
         "quantity": 1.0,
         "unit": "개"
     }

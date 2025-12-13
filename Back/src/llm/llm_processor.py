@@ -56,40 +56,42 @@ def is_garbage_text(item):
 def refine_batch_items(lines: list):
     input_lines = []
     for i, item in enumerate(lines):
-        if isinstance(item, dict):
-            text = item.get('text', '')
-        elif isinstance(item, list):
-            text = " ".join(str(x) for x in item)
-        else:
-            text = str(item)
-        input_lines.append(f"- {text}")
+        text = str(item).strip()
+        if text:
+            input_lines.append(f"Line {i+1}: {text}")
     
     input_text = "\n".join(input_lines)
+    
+    # 디버깅: 실제로 LLM에 들어가는 텍스트 확인
+    print(f"\n[Debug Batch Input]\n{input_text}\n----------------")
     
     print(f"\n[Debug] LLM Input:\n{input_text[:100]}...\n")
 
     # [핵심] 모델에게 "생각"할 틈을 주지 않는 예시(Few-Shot) 제공
     system_prompt = """
-    You are an AI expert specializing in OCR error correction and structured data extraction from Korean receipts.
-    Your goal is to extract **food ingredients** suitable for refrigerator storage from the provided OCR text lines.
+    You are an AI expert specializing in OCR data extraction from Korean receipts.
 
     [Primary Instructions]
-    1. **Target:** Extract ONLY food ingredients. Ignore non-food items (e.g., plastic bags, fees, headers).
-    2. **Extraction Strategy (CRITICAL):**
-       - **2-a. Keyword Spotting (Priority):** First, scan the text for any recognizable Korean food noun (e.g., '두부', '우유', '삼겹살', '라면'). 
-         - If a clear food noun is found inside the string, **EXTRACT IT IMMEDIATELY** and **STOP** analyzing the rest.
-         - Ignore prefixes, suffixes, brand names, or gibberish surrounding the keyword. (e.g., '009풀/소가부침두부' -> Contains '두부'? -> YES -> Result: '두부').
-       - **2-b. Typo Correction (Secondary):** Only if **NO** recognizable food noun is found, strictly then attempt to correct typos based on context and phonetic similarity (e.g., '면필' -> '연필').
+    1. **Process ALL Lines (CRITICAL):** You must iterate through **EVERY single line** provided in the input. Do NOT stop processing after finding the first ingredient. Check all lines from top to bottom.
+    2. **Target:** Extract ONLY food ingredients. Ignore non-food items (e.g., plastic bags, fees, headers).
 
-    3. **Formatting:** Return the result strictly as a JSON List. Do not include markdown tags or explanations.
+    3. **Extraction Strategy:**
+        - **Step 1: Keyword Spotting:** Scan the current line for a recognizable Korean food noun (e.g., '두부', '우유', '삼겹살', '양파').
+            - If a clear food noun is found: Extract it and **move to the next line immediately**. (Do NOT stop the entire task).
+            - Ignore prefixes (e.g., '풀/', 'CJ'), suffixes, or brand names. 
+            - *Example:* '009풀/소가부침두부' -> Keyword '두부' found -> Extract '두부' -> Next line.
+        - **Step 2: Typo Correction:** If NO food noun is found, try to correct typos (e.g., '면필' -> '연필').
+        - **Step 3: Skip:** If the line is definitely not food, skip to the next line.
+
+    4. **Formatting:** Return the result strictly as a JSON List.
 
     [Data Extraction Rules]
-    - **product_name**: Extract the core ingredient name. Remove brand names and adjectives unless necessary for identification.
-    - **quantity**: Extract the numeric quantity. If not specified, default to 1.
-    - **unit**: Use standard units: ['개' (pieces), 'g', 'kg', 'ml', 'L']. If unclear, use '개'.
-    - **category**: Choose exactly one from: 
-        ['채소', '과일', '육류', '수산물', '유제품/두부/알류', '면/빵/떡', '가공/냉동식품', '양념/오일', '음료', '기타'].
-    [Few-Shot Examples (Logic Demonstration Only)]
+    - **product_name**: Extract the core ingredient name only. (e.g., '풀/소가부침두부' -> '두부', '008 상추' -> '상추').
+    - **quantity**: Numeric (default 1).
+    - **unit**: ['개', 'g', 'kg', 'ml', 'L'] (default '개').
+    - **category**: Choose exactly one from: ['채소', '과일', '육류', '수산물', '유제품/두부/알류', '면/빵/떡', '가공/냉동식품', '양념/오일', '음료', '기타'].
+
+    [Few-Shot Examples (Structure Only)]
     *Note: These examples use non-food items to demonstrate the correction and formatting logic. Apply this same logic to FOOD ingredients in the actual task.*
 
     Input Lines:
@@ -105,7 +107,7 @@ def refine_batch_items(lines: list):
     ]
 
     [Task]
-    Analyze the provided OCR text lines below and extract food ingredients following the rules above.
+    Analyze ALL provided text lines below and extract every food ingredient found.
     """.strip()
 
     # 실제 사용자 입력
