@@ -48,7 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadUserItems();
   }
 
-  Future<void> _loadUserItems() async { // 사용자별 데이터 저장 및 불러오기
+  Future<void> _loadUserItems() async {
     final prefs = await SharedPreferences.getInstance();
     
     setState(() {
@@ -109,7 +109,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return categories;
   }
 
-  void _showLogoutDialog() { // 로그아웃 확인 팝업
+  void _showLogoutDialog() {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -125,15 +125,15 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           ElevatedButton(
             onPressed: () {
-              Navigator.pop(ctx); // 팝업 닫기
+              Navigator.pop(ctx);
               
-              Navigator.pushAndRemoveUntil( // 로그인 화면으로 이동
+              Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (context) => const LoginScreen()),
                 (route) => false,
               );
 
-              ScaffoldMessenger.of(context).showSnackBar( // 로그아웃 알림 띄우기
+              ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text("로그아웃 되었어요."),
                   duration: Duration(seconds: 2),
@@ -152,7 +152,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _showWithdrawConfirmDialog() { // 회원탈퇴 1단계: 단순 확인 팝업
+  void _showWithdrawConfirmDialog() {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -168,8 +168,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           ElevatedButton(
             onPressed: () {
-              Navigator.pop(ctx); // 1차 팝업 닫기
-              showDialog( // 2차 팝업(비밀번호 입력) 띄우기
+              Navigator.pop(ctx);
+              showDialog(
                 context: context,
                 barrierDismissible: false,
                 builder: (context) => WithdrawPasswordDialog(userId: widget.userId),
@@ -651,107 +651,109 @@ class _HomeScreenState extends State<HomeScreen> {
                 return SingleChildScrollView(
                   controller: scrollController,
                   padding: const EdgeInsets.fromLTRB(20, 30, 20, 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('보관 위치', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        children: [
-                          FilterChip(
-                            label: const Text('전체'),
-                            selected: _selectedStorageFilter == null,
-                            backgroundColor: Colors.white,
-                            selectedColor: Colors.grey[200],
-                            onSelected: (bool selected) {
-                              setModalState(() => _selectedStorageFilter = null);
-                              setState(() {});
-                            },
-                          ),
-                          ...StorageLocation.values.map((loc) => FilterChip(
-                            label: Text(_getStorageKoreanName(loc)),
-                            selected: _selectedStorageFilter == loc,
-                            backgroundColor: Colors.white,
-                            selectedColor: Colors.grey[200],
-                            onSelected: (bool selected) {
-                              setModalState(() => _selectedStorageFilter = selected ? loc : null);
-                              setState(() {}); 
-                            },
-                          )),
-                        ],
-                      ),
-                      const Divider(height: 30),
-                      const Text('카테고리', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        children: [
-                          FilterChip(
-                            label: const Text('전체'),
-                            selected: _selectedCategoryFilter == null,
-                            backgroundColor: Colors.white,
-                            selectedColor: Colors.grey[200],
-                            onSelected: (bool selected) {
-                              setModalState(() => _selectedCategoryFilter = null);
-                              setState(() {});
-                            },
-                          ),
-                          ..._sortedCategories.map((cat) => FilterChip(
-                            label: Text(_getCategoryKoreanName(cat)),
-                            selected: _selectedCategoryFilter == cat,
-                            backgroundColor: Colors.white,
-                            selectedColor: Colors.grey[200],
-                            onSelected: (bool selected) {
-                              setModalState(() => _selectedCategoryFilter = selected ? cat : null);
-                              setState(() {});
-                            },
-                          )),
-                        ],
-                      ),
-                      const SizedBox(height: 40),
-                      
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () => Navigator.pop(ctx),
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            backgroundColor: const Color(0xFF0F172A),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                          child: const Text('확인', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                  child: SafeArea( // SafeArea 추가: 하단 바에 가려지지 않도록 보호
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('보관 위치', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          children: [
+                            FilterChip(
+                              label: const Text('전체'),
+                              selected: _selectedStorageFilter == null,
+                              backgroundColor: Colors.white,
+                              selectedColor: Colors.grey[200],
+                              onSelected: (bool selected) {
+                                setModalState(() => _selectedStorageFilter = null);
+                                setState(() {});
+                              },
+                            ),
+                            ...StorageLocation.values.map((loc) => FilterChip(
+                              label: Text(_getStorageKoreanName(loc)),
+                              selected: _selectedStorageFilter == loc,
+                              backgroundColor: Colors.white,
+                              selectedColor: Colors.grey[200],
+                              onSelected: (bool selected) {
+                                setModalState(() => _selectedStorageFilter = selected ? loc : null);
+                                setState(() {}); 
+                              },
+                            )),
+                          ],
                         ),
-                      ),
-                      
-                      const SizedBox(height: 20),
+                        const Divider(height: 30),
+                        const Text('카테고리', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          children: [
+                            FilterChip(
+                              label: const Text('전체'),
+                              selected: _selectedCategoryFilter == null,
+                              backgroundColor: Colors.white,
+                              selectedColor: Colors.grey[200],
+                              onSelected: (bool selected) {
+                                setModalState(() => _selectedCategoryFilter = null);
+                                setState(() {});
+                              },
+                            ),
+                            ..._sortedCategories.map((cat) => FilterChip(
+                              label: Text(_getCategoryKoreanName(cat)),
+                              selected: _selectedCategoryFilter == cat,
+                              backgroundColor: Colors.white,
+                              selectedColor: Colors.grey[200],
+                              onSelected: (bool selected) {
+                                setModalState(() => _selectedCategoryFilter = selected ? cat : null);
+                                setState(() {});
+                              },
+                            )),
+                          ],
+                        ),
+                        const SizedBox(height: 40),
+                        
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              backgroundColor: const Color(0xFF0F172A),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            child: const Text('확인', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 20),
 
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pop(ctx); 
-                              _showLogoutDialog(); 
-                            },
-                            child: const Text(
-                              '로그아웃',
-                              style: TextStyle(color: Colors.grey, fontSize: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(ctx); 
+                                _showLogoutDialog(); 
+                              },
+                              child: const Text(
+                                '로그아웃',
+                                style: TextStyle(color: Colors.grey, fontSize: 12),
+                              ),
                             ),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pop(ctx);
-                              _showWithdrawConfirmDialog(); // 회원탈퇴 확인 팝업 호출
-                            },
-                            child: const Text(
-                              '회원탈퇴',
-                              style: TextStyle(color: Colors.grey, fontSize: 12),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(ctx);
+                                _showWithdrawConfirmDialog(); 
+                              },
+                              child: const Text(
+                                '회원탈퇴',
+                                style: TextStyle(color: Colors.grey, fontSize: 12),
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },
@@ -822,31 +824,34 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       backgroundColor: Colors.white,
       builder: (ctx) {
-        return Container(
-          padding: const EdgeInsets.all(16),
-          height: 200,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('식재료 등록하기', style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 16),
-              ListTile(
-                leading: const Icon(Icons.image),
-                title: const Text('이미지로 입력'),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _pickImageAndProcess(ImageSource.gallery);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.edit_note),
-                title: const Text('직접 입력'),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _navigateAndManageItem(context);
-                },
-              ),
-            ],
+        
+        return SafeArea( // SafeArea 추가: 하단 바에 가려지지 않도록 보호
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            height: 200,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('식재료 등록하기', style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: 16),
+                ListTile(
+                  leading: const Icon(Icons.image),
+                  title: const Text('이미지로 입력(아직 사용 안됨)'),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _pickImageAndProcess(ImageSource.gallery);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.edit_note),
+                  title: const Text('직접 입력'),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _navigateAndManageItem(context);
+                  },
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -881,28 +886,31 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       backgroundColor: Colors.white,
       builder: (ctx) {
-        return Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.edit, color: Colors.blue),
-                title: const Text('수정'),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _navigateAndManageItem(context, existingItem: item);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.delete, color: Colors.red),
-                title: const Text('삭제'),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _confirmDeleteOrUse(item); 
-                },
-              ),
-            ],
+        
+        return SafeArea( // SafeArea 추가: 하단 바에 가려지지 않도록 보호
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.edit, color: Colors.blue),
+                  title: const Text('수정'),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _navigateAndManageItem(context, existingItem: item);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.delete, color: Colors.red),
+                  title: const Text('삭제'),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _confirmDeleteOrUse(item); 
+                  },
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -1031,7 +1039,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 if (filteredList.isEmpty) {
                   return const Padding(
                     padding: EdgeInsets.only(top: 50.0),
-                    child: Center(child: Text('식재료를 등록 해주세요.')),
+                    child: Center(child: Text('등록된 식재료가 없어요.')),
                   );
                 }
 
@@ -1058,7 +1066,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class WithdrawPasswordDialog extends StatefulWidget { // 회원탈퇴시 비밀번호 재확인
+class WithdrawPasswordDialog extends StatefulWidget {
   final String userId;
   const WithdrawPasswordDialog({super.key, required this.userId});
 
@@ -1076,7 +1084,8 @@ class _WithdrawPasswordDialogState extends State<WithdrawPasswordDialog> {
     
     final String? storedPw = prefs.getString(widget.userId);
 
-    if (inputPw == storedPw) { // 계정 삭제
+    if (inputPw == storedPw) {
+      // 계정 삭제
       await prefs.remove(widget.userId);
       await prefs.remove('nickname_${widget.userId}');
       await prefs.remove('food_items_${widget.userId}');
