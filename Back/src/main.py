@@ -2,27 +2,27 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware # CORS 미들웨어 import
-from fastapi.concurrency import run_in_threadpool # FastAPI 내장 유틸
+from anyio import to_thread
+
 from .db.database import initialize_database # DB 초기화 함수
 from contextlib import asynccontextmanager
 
 from .ingredients.ingredients_router import router as ingredients_router
 from .ocr.ocr_router import router as ocr_router
 from .recipes.recipes_router import router as recipes_router
-from .dishes.dishes_router import  router as dishes_router
+from .dishes.dishes_router import router as dishes_router
 from .llm.llm_router import router as llm_router
 
 # ---------- Lifespan Context Manager 정의 (Startup/Shutdown 관리) ----------
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("FastAPI 서버 시작: 데이터베이스 초기화 작업 시작")
-    initialize_database()
-    print("FastAPI 서버 시작: 데이터베이스 초기화 완료")
-    
+
     # [수정] 동기 함수를 별도 스레드에서 실행하여 메인 루프 막힘 방지
-    await run_in_threadpool(initialize_database)
+    await to_thread.run_sync(initialize_database)
     
     print("FastAPI 서버 시작: 초기화 완료!")
+
     yield
     print("FastAPI 서버 종료")
 
@@ -57,7 +57,4 @@ app.include_router(recipes_router, prefix="/recipes", tags=["Recipes"])
 app.include_router(dishes_router, prefix="/dishes", tags=["Cooked Dishes"])
 # LLM 관련 라우터
 app.include_router(llm_router, prefix="/llm", tags=["AI Processing"])
-app.include_router(dishes_router)
 
-
-#app.include_router(llm_internal_router, prefix="/llm", tags=["Internal"])
