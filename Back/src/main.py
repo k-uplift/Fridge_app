@@ -7,6 +7,8 @@ from contextlib import asynccontextmanager
 from .ingredients.ingredients_router import router as ingredients_router
 from .ocr.ocr_router import router as ocr_router
 from .recipes.recipes_router import router as recipes_router
+from .dishes.dishes_router import  router as dishes_router
+
 # from .llm.router import router as llm_internal_router
 
 # ---------- Lifespan Context Manager 정의 (Startup/Shutdown 관리) ----------
@@ -30,6 +32,8 @@ app.include_router(ingredients_router, prefix="/ingredients", tags=["Ingredients
 app.include_router(ocr_router, prefix="/ocr", tags=["OCR"])
 # 레시피 관련 라우터
 app.include_router(recipes_router, prefix="/recipes", tags=["Recipes"])
+# 조리된 음식 관련 라우터
+app.include_router(dishes_router)
 
 
 #app.include_router(llm_internal_router, prefix="/llm", tags=["Internal"])
