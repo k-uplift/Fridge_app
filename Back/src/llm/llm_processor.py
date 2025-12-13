@@ -1,6 +1,7 @@
 import ollama
 import json
 import re
+import os
 
 def is_garbage_text(item):
     """
@@ -38,12 +39,12 @@ def is_garbage_text(item):
     # 4. 불용어(Garbage Keywords) 필터링
     # (헤더나 명백한 쓰레기 단어 삭제)
     GARBAGE_KEYWORDS = [
-        "합계", "결제", "카드", "면세", "부가세", "포인트", "주소", "TEL", "대표", 
+        "결제", "카드", "면세", "부가세", "포인트", "주소", "TEL", "대표", 
         "할인", "영수증", "Total", "내역", "배달", "반품", "교환", "가맹점", 
-        "금액", "승인", "매출", "사업자", "품목", "봉투", "쇼핑백", "종량제", "비닐", "Trash", "단가", "수량",
+        "승인", "매출", "사업자", "품목", "봉투", "쇼핑백", "종량제", "비닐", "Trash",
         "POINT", "Point", "적립", "사용", "소멸", "잔여", "누리", "에누리",
-        "PL", "S-OIL", "L.POINT", "CASH", "CARD", "쿠폰", 
-        "미사용", "개월", "문의", "안내", "영수증확인", "서명"
+        "PL", "S-OIL", "L.POINT", "CASH", "CARD", "쿠폰", "부가세", "바코드", "회원", "포인트"
+        "미사용", "개월", "문의", "안내", "영수증확인", "서명", "사업자번호", "전화", "홈페이지"
     ]
     
     # 키워드가 텍스트에 포함되어 있으면 삭제
@@ -52,7 +53,7 @@ def is_garbage_text(item):
     return False
 
 # 2. LLM 호출 함수 (One-Shot 프롬프트 적용)
-def refine_batch_items(lines: list, image_path: str | None = None):
+def refine_batch_items(lines: list):
     input_lines = []
     for i, item in enumerate(lines):
         if isinstance(item, dict):
@@ -69,48 +70,58 @@ def refine_batch_items(lines: list, image_path: str | None = None):
 
     # [핵심] 모델에게 "생각"할 틈을 주지 않는 예시(Few-Shot) 제공
     system_prompt = """
-    You are a receipt data extractor. Convert OCR text into a JSON list.
-    
-    [Rules]
-    1. Extract only edible ingredients. Ignore trash, discounts, and barcodes.
-    2. Convert names to standard Korean (e.g., '백설 설탕' -> '설탕').
-    3. Output ONLY valid JSON. No "Here is the JSON" or thinking text.
-    
-    [Example Interaction]
-    User: 
-    - 001 P서울우유2.3L [4,500]
-    - (주)농협유통
-    - 002 P햇양파 1망
-    - 종량제봉투 20L
-    
-    Assistant:
+    You are an AI expert specializing in OCR error correction and structured data extraction from Korean receipts.
+    Your goal is to extract **food ingredients** suitable for refrigerator storage from the provided OCR text lines.
+
+    [Primary Instructions]
+    1. **Target:** Extract ONLY food ingredients. Ignore non-food items (e.g., plastic bags, delivery fees, household goods, receipt headers/footers).
+    2. **Correction:** The OCR text contains many typos. Correct Korean words based on context and phonetic similarity (e.g., fix '면필' to '연필').
+    3. **Formatting:** Return the result strictly as a JSON List. Do not include markdown tags or explanations.
+
+    [Data Extraction Rules]
+    - **product_name**: Extract the core ingredient name. Remove brand names and adjectives unless necessary for identification.
+    - **quantity**: Extract the numeric quantity. If not specified, default to 1.
+    - **unit**: Use standard units: ['개' (pieces), 'g', 'kg', 'ml', 'L']. If unclear, use '개'.
+    - **category**: Choose one from: ['육류' (Meat), '어패류' (Seafood), '채소' (Vegetable), '과일' (Fruit), '유제품' (Dairy), '가공식품' (Processed), '소스' (Sauce), '음료' (Beverage), '기타' (Others)].
+
+    [Few-Shot Examples (Logic Demonstration Only)]
+    *Note: These examples use non-food items to demonstrate the correction and formatting logic. Apply this same logic to FOOD ingredients in the actual task.*
+
+    Input Lines:
+    - 001. P 몽나미 볼팬 (Black)
+    - 3M 스카치테이푸 1,500
+    - 003. A4 용지 1Box
+
+    Output JSON:
     [
-      {"product_name": "우유", "quantity": 1, "unit": "개", "category": "유제품"},
-      {"product_name": "양파", "quantity": 1, "unit": "망", "category": "채소"}
+        {"product_name": "볼펜", "quantity": 1, "unit": "개", "category": "기타"},
+        {"product_name": "테이프", "quantity": 1, "unit": "개", "category": "기타"},
+        {"product_name": "A4 용지", "quantity": 1, "unit": "개", "category": "기타"}
     ]
+
+    [Task]
+    Analyze the provided OCR text lines below and extract food ingredients following the rules above.
     """.strip()
 
     # 실제 사용자 입력
     user_content = f"User:\n{input_text}\n\nAssistant:"
-
+    user_message = {
+        "role": "user",
+        "content": user_content
+    }
+    
     try:
         response = ollama.chat(
-            model='qwen3-vl:8b', 
+            model='deepseek-r1:8b', 
             messages=[
                 {'role': 'system', 'content': system_prompt},
-                {
-                 'role': 'user',
-                 'content': user_content,
-                 'images': [image_path] if image_path else [],
-                }
+                user_message  # 수정된 메시지 객체 사용
             ],
-            # format='json'을 끄고 예시를 따라하게 유도하는 것이 4B 모델에겐 더 효과적임
-            # format='json', 
+            format='json',
             options={
-                'temperature': 0.1, 
-                'num_predict': 1024, # 예시를 보고 바로 답하므로 토큰이 많이 필요 없음
-                'num_ctx': 4096,
-                'stop': ["User:", "Assistant:"] # 말 꼬리 잡기 방지
+                'temperature': 0.0,
+                'num_ctx': 8192,
+                'num_predict': 4096,
             },
             keep_alive=-1
         )
@@ -167,7 +178,7 @@ def refine_batch_items(lines: list, image_path: str | None = None):
         print(f"Error in refine_batch_items: {e}")
         return []
     
-def refine_ingredients_with_llm(ocr_data_list, image_path: str = None):
+def refine_ingredients_with_llm(ocr_data_list):
     """
     """
     if not ocr_data_list: return []
@@ -187,7 +198,7 @@ def refine_ingredients_with_llm(ocr_data_list, image_path: str = None):
         if not chunk: continue
         
         # [핵심 수정] 여기서 image_path를 refine_batch_items에 전달해야 함!
-        items = refine_batch_items(chunk, image_path=image_path)
+        items = refine_batch_items(chunk)
         
         if items:
             final_items.extend(items)
@@ -246,7 +257,7 @@ def run_recipe_llm(user_prompt: str):
     """
 
     response = ollama.chat(
-        model="qwen3-vl:8b",
+        model="deepseek-r1:8b",
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}

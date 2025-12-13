@@ -33,13 +33,10 @@ async def refine_from_ocr(payload: OCRLinesPayload):
     필터링 -> 배치 처리 -> LLM 변환 과정을 거쳐 식재료 리스트 반환
     """
     
-    # Pydantic 모델 리스트를 딕셔너리 리스트로 변환 (processor 호환용)
     ocr_data_list = [line.model_dump() for line in payload.lines]
 
-    # [핵심 수정] 매니저 함수 호출 + image_path 전달
     refined_items = refine_ingredients_with_llm(
-        ocr_data_list=ocr_data_list,
-        image_path=payload.image_path  # 경로 전달
+        ocr_data_list=ocr_data_list
     )
 
     return refined_items

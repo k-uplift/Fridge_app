@@ -22,11 +22,9 @@ client = TestClient(app)
 def test_llm_refinement():
     input_filename = "ocr_result.json"
     output_filename = "llm_result.json"
-    image_filename = "sample_receipt.jpg"
-    
+  
     input_path = os.path.join(current_dir, input_filename)
     output_path = os.path.join(current_dir, output_filename)
-    image_path = os.path.join(current_dir, image_filename)
 
     if not os.path.exists(input_path):
         print(f"[Error] '{input_filename}' 파일이 없습니다.")
@@ -40,7 +38,6 @@ def test_llm_refinement():
     payload = {
         "line_count": len(lines),
         "lines": lines, # 이미 딕셔너리 리스트이므로 그대로 전달
-        "image_path": image_path,
     }
     
     try:

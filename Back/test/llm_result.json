@@ -1,1 +1,44 @@
-[]
+[
+    {
+        "product_name": "참이슬",
+        "category": "음료",
+        "quantity": 1.0,
+        "unit": "개"
+    },
+    {
+        "product_name": "막걸리",
+        "category": "음료",
+        "quantity": 5.0,
+        "unit": "개"
+    },
+    {
+        "product_name": "펩시넥스",
+        "category": "음료",
+        "quantity": 1.0,
+        "unit": "L"
+    },
+    {
+        "product_name": "양파",
+        "category": "채소",
+        "quantity": 1.0,
+        "unit": "개"
+    },
+    {
+        "product_name": "새우깡",
+        "category": "가공식품",
+        "quantity": 1.0,
+        "unit": "개"
+    },
+    {
+        "product_name": "포카칩",
+        "category": "가공식품",
+        "quantity": 7.0,
+        "unit": "개"
+    },
+    {
+        "product_name": "상추",
+        "category": "채소",
+        "quantity": 1.0,
+        "unit": "개"
+    }
+]
