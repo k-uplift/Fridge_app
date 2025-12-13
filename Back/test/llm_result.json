@@ -40,5 +40,11 @@
         "category": "채소",
         "quantity": 1.0,
         "unit": "개"
+    },
+    {
+        "product_name": "두부",
+        "category": "가공식품",
+        "quantity": 1.0,
+        "unit": "개"
     }
 ]

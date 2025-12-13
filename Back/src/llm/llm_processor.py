@@ -74,9 +74,14 @@ def refine_batch_items(lines: list):
     Your goal is to extract **food ingredients** suitable for refrigerator storage from the provided OCR text lines.
 
     [Primary Instructions]
-    1. **Target:** Extract ONLY food ingredients. Ignore non-food items (e.g., plastic bags, delivery fees, household goods, receipt headers/footers).
-    2. **Correction:** The OCR text contains many typos. Correct Korean words based on context and phonetic similarity (e.g., fix '면필' to '연필').
-    3. **Formatting:** Return the result strictly as a JSON List. Do not include markdown tags or explanations.
+    1. **Target:** Extract ONLY food ingredients. Ignore non-food items (e.g., plastic bags, fees, headers).
+    2. **Extraction Strategy (CRITICAL):**
+       - **2-a. Keyword Spotting (Priority):** First, scan the text for any recognizable Korean food noun (e.g., '두부', '우유', '삼겹살', '라면'). 
+         - If a clear food noun is found inside the string, **EXTRACT IT IMMEDIATELY** and **STOP** analyzing the rest.
+         - Ignore prefixes, suffixes, brand names, or gibberish surrounding the keyword. (e.g., '009풀/소가부침두부' -> Contains '두부'? -> YES -> Result: '두부').
+       - **2-b. Typo Correction (Secondary):** Only if **NO** recognizable food noun is found, strictly then attempt to correct typos based on context and phonetic similarity (e.g., '면필' -> '연필').
+
+3. **Formatting:** Return the result strictly as a JSON List. Do not include markdown tags or explanations.
 
     [Data Extraction Rules]
     - **product_name**: Extract the core ingredient name. Remove brand names and adjectives unless necessary for identification.
