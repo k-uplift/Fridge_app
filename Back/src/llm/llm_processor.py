@@ -81,7 +81,7 @@ def refine_batch_items(lines: list):
          - Ignore prefixes, suffixes, brand names, or gibberish surrounding the keyword. (e.g., '009풀/소가부침두부' -> Contains '두부'? -> YES -> Result: '두부').
        - **2-b. Typo Correction (Secondary):** Only if **NO** recognizable food noun is found, strictly then attempt to correct typos based on context and phonetic similarity (e.g., '면필' -> '연필').
 
-3. **Formatting:** Return the result strictly as a JSON List. Do not include markdown tags or explanations.
+    3. **Formatting:** Return the result strictly as a JSON List. Do not include markdown tags or explanations.
 
     [Data Extraction Rules]
     - **product_name**: Extract the core ingredient name. Remove brand names and adjectives unless necessary for identification.
