@@ -18,6 +18,7 @@ dependencies:
   image_picker: ^1.2.1
   flutter_local_notifications: ^17.2.2
   shared_preferences: ^2.5.4
+  http: ^1.6.0
 
 
 dev_dependencies:
