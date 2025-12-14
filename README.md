@@ -25,16 +25,16 @@
         </tr>
         <tr>
             <td align="center">
-                <a href="[[기세웅 GitHub URL]](https://github.com/k-uplift)">GitHub</a>
+                <a href="(https://github.com/k-uplift)">GitHub</a>
             </td>
             <td align="center">
-                <a href="[[김혜성 GitHub URL]](https://github.com/maeseong)">GitHub</a>
+                <a href="(https://github.com/maeseong)">GitHub</a>
             </td>
             <td align="center">
-                <a href="[[박준서 GitHub URL]](https://github.com/junseo0b)">GitHub</a>
+                <a href="(https://github.com/junseo0b)">GitHub</a>
             </td>
             <td align="center">
-                <a href="[[배선아 GitHub URL]](https://github.com/Baeseona)">GitHub</a>
+                <a href="(https://github.com/Baeseona)">GitHub</a>
             </td>
         </tr>
     </tbody>
