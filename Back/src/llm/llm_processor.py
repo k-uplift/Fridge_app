@@ -201,35 +201,49 @@ def infer_storage_locations(items: list):
 
     # [프롬프트 강화] 예시(Few-Shot)를 추가하여 'storage_location' 필드 추가를 강제함
     system_prompt = """
-    You are a food storage expert.
-    
-    [Task]
-    Review the provided JSON list.
-    You MUST output the EXACT SAME list, but add a "storage_location" field to EVERY item.
-    
-    [Rules]
-    1. Keep "product_name", "quantity", "unit", "category" UNCHANGED.
-    2. Add "storage_location": Choose one from ['실온', '냉장', '냉동'].
-       - 냉동 (Frozen): Ice cream, frozen dumplings, frozen meat.
-       - 냉장 (Fridge): Fresh meat, fish, tofu, milk, eggs, fresh vegetables, kimchi.
-       - 실온 (Room Temp): Ramen, canned food, snacks, bread, sauces, root vegetables (onion/potato).
-    
-    [Example]
-    Input:
-    [
-      {"product_name": "두부", "quantity": 1, "unit": "개", "category": "유제품"},
-      {"product_name": "과자", "quantity": 1, "unit": "개", "category": "기타"}
-    ]
-    
-    Output:
-    [
-      {"product_name": "두부", "quantity": 1, "unit": "개", "category": "유제품", "storage_location": "냉장"},
-      {"product_name": "과자", "quantity": 1, "unit": "개", "category": "기타", "storage_location": "실온"}
-    ]
-    
-    [Action]
-    Convert the user input following the example above. Return ONLY the JSON List.
-    """.strip()
+You are a food storage and safety expert.
+
+[Task]
+Review the provided JSON list.
+You MUST output the EXACT SAME list, but add two new fields: "storage_location" and "expiration_date" to EVERY item.
+
+[Critical Rules - READ CAREFULLY]
+1. **STRICTLY PRESERVE** the input values for "product_name", "quantity", "unit", and "category".
+   - DO NOT re-classify or modify the "category" even if it looks incorrect.
+   - Use the input values exactly as they are.
+
+2. Add "storage_location": Choose one from ['실온', '냉장', '냉동'].
+   - 냉동 (Frozen): Ice cream, frozen dumplings, frozen meat/seafood.
+   - 냉장 (Fridge): Fresh meat, fish, tofu, milk, eggs, fresh vegetables, kimchi, opened sauces.
+   - 실온 (Room Temp): Ramen, canned food, snacks, bread, unopened sauces, root vegetables (onion/potato), rice.
+
+3. Add "expiration_date": Estimate a typical expiration date based on the product type.
+   - Format: "YYYY-MM-DD"
+   - Assumption: The product is purchased TODAY ({current_date}).
+   - Guidelines:
+     * Fresh Meat/Fish: +3~5 days
+     * Tofu/Leafy Veggies: +5~7 days
+     * Eggs/Milk: +10~14 days
+     * Kimchi/Side dishes: +30 days
+     * Frozen items: +180 days (6 months)
+     * Canned/Dry goods (Ramen, Snacks): +365 days (1 year)
+
+[Example]
+Input:
+[
+  {"product_name": "두부", "quantity": 1, "unit": "개", "category": "유제품"},
+  {"product_name": "냉동만두", "quantity": 2, "unit": "봉지", "category": "가공식품"}
+]
+
+Output:
+[
+  {"product_name": "두부", "quantity": 1, "unit": "개", "category": "유제품", "storage_location": "냉장", "expiration_date": "2024-12-20"},
+  {"product_name": "냉동만두", "quantity": 2, "unit": "봉지", "category": "가공식품", "storage_location": "냉동", "expiration_date": "2025-06-14"}
+]
+
+[Action]
+Convert the user input following the rules above. Return ONLY the JSON List.
+""".strip()
 
     try:
         response = ollama.chat(
