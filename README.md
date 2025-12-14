@@ -87,9 +87,9 @@
             <td align="center">김혜성</td>
             <td>
                 <ul>
-                    <li></li>
-                    <li></li>
-                    <li></li>
+                    <li>영수증 인식 및 출력 화면 구현</li>
+                    <li>로그인 화면 구현</li>
+                    <li>레시피 출력 화면 구현</li>
                 </ul>
             </td>
         </tr>
@@ -97,9 +97,9 @@
             <td align="center">박준서</td>
             <td>
                 <ul>
-                    <li></li>
-                    <li></li>
-                    <li></li>
+                    <li>알림 시스템 구현</li>
+                    <li>LLM 후처리 출력 화면 구현</li>
+                    <li>레시피 등록 화면 구현</li>
                 </ul>
             </td>
         </tr>
@@ -119,6 +119,13 @@
 
 # 5. 기술 스택
 ## 5.1 Language
+- Frontend
+  - Dart
+  - Java
+  - Kotiln
+  - Swift
+- Backend
+  - Python
 ## 5.2 Backend
 - Framework: FastAPI
 - Database: SQLite3
@@ -128,6 +135,7 @@
   - LLM Model: deepseek-r1:8b
   - Image Processin: OpenCV(cv2) 및 Numpy
 ## 5.3 Frontend
+- Framework: Flutter
 ## 5.4 Cooperation
 - Version Control: Git, GtiHub
 - API Testing: Postman
