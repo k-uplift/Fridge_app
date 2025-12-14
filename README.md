@@ -222,4 +222,4 @@ Fridge_app/
     # pip install paddlepaddle -i [https://pypi.tuna.tsinghua.edu.cn/simple](https://pypi.tuna.tsinghua.edu.cn/simple)
     # pip install paddleocr
     ```
-
+* **apk 설치 주소** (https://drive.google.com/file/d/1JYLdLgRpTLQkDvMpIYX0sVTrKJxgK9Cd/view?usp=drive_link)
