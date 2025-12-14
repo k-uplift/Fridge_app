@@ -187,3 +187,32 @@ Fridge_app/
 
 <br><br><br>
 
+# 8. 설치 패키지 다운로드 주소
+### 1. 필수 환경 설정
+
+"프레시 킵" 실행을 위해 다음 도구들을 선행 설치
+
+* **Python:** 3.9 이상 버전 (https://www.python.org/downloads/)
+* **Ollama 서버:** LLM 구동을 위한 서버 (https://ollama.com/download)
+
+### 2. LLM 모델 다운로드
+
+"프레시 킵"은 Ollama 환경에서 특정 모델을 사용
+
+* **사용 모델:** deepseek-r1:8b
+* **다운로드 명령어:**
+    ```bash
+    ollama pull deepseek-r1:8b 
+    ```
+
+### 3. OCR 엔진 설치
+
+"프레시 킵"의 OCR 엔진은 **PaddleOCR** 기반
+
+* **설치 필요 패키지:** PaddlePaddle 프레임워크 및 `paddleocr` 라이브러리
+* **다운로드 명령어:**
+    ```bash
+    # pip install paddlepaddle -i [https://pypi.tuna.tsinghua.edu.cn/simple](https://pypi.tuna.tsinghua.edu.cn/simple)
+    # pip install paddleocr
+    ```
+
