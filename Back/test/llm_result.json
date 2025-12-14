@@ -6,13 +6,13 @@
         "unit": "개"
     },
     {
-        "product_name": "막걸리",
+        "product_name": "서울장수막걸리",
         "category": "음료",
-        "quantity": 1.0,
+        "quantity": 5.0,
         "unit": "개"
     },
     {
-        "product_name": "펩시",
+        "product_name": "펩시넥스1.25L",
         "category": "음료",
         "quantity": 1.0,
         "unit": "개"
@@ -24,15 +24,21 @@
         "unit": "개"
     },
     {
-        "product_name": "새우깡",
-        "category": "면/빵/떡",
+        "product_name": "새우깡노래방",
+        "category": "간식",
         "quantity": 1.0,
         "unit": "개"
     },
     {
-        "product_name": "포카칩",
-        "category": "면/빵/떡",
+        "product_name": "청과류",
+        "category": "과일",
         "quantity": 1.0,
+        "unit": "개"
+    },
+    {
+        "product_name": "포카칩오리지널",
+        "category": "간식",
+        "quantity": 7.0,
         "unit": "개"
     },
     {
@@ -43,8 +49,8 @@
     },
     {
         "product_name": "두부",
-        "category": "유제품/두부/알류",
-        "quantity": 1.0,
+        "category": "식품",
+        "quantity": 2.0,
         "unit": "개"
     }
 ]
