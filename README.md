@@ -1,6 +1,6 @@
-[ 앱 실행 화면 사진 추가]
+<img width="250" height="250" alt="image" src="https://github.com/user-attachments/assets/f620542e-434b-4d0b-a794-834d999371ab" />
 
-# 0. 시작하기
+
 
 # 1. 프로젝트 개요
 - 프로젝트 이름 : 프레시 킵 (Fresh Keep)
@@ -68,8 +68,8 @@
 <table width="100%">
     <thead>
         <tr>
-            <th width="25%">이름</th>
-            <th width="75%">담당 역할</th>
+            <th width="20%">이름</th>
+            <th width="80%">담당 역할</th>
         </tr>
     </thead>
     <tbody>
@@ -77,9 +77,10 @@
             <td align="center">기세웅</td>
             <td>
                 <ul>
-                    <li></li>
-                    <li></li>
-                    <li></li>
+                    <li>OCR 연동</li>
+                    <li>LLM 프롬프트 엔지니어링</li>
+                    <li>AI 서비스 연결 오류 처리 및 디버깅</li>
+                    <li>레시피 JSON 정제</li>
                 </ul>
             </td>
         </tr>
@@ -107,9 +108,10 @@
             <td align="center">배선아</td>
             <td>
                 <ul>
-                    <li></li>
-                    <li></li>
-                    <li></li>
+                    <li>DB 관리</li>
+                    <li>라우터 구현</li>
+                    <li>유통기한 자동 설정, 알림 구현</li>
+                    <li>재료 부족분 분류 로직 구현</li>
                 </ul>
             </td>
         </tr>
@@ -171,6 +173,17 @@ Fridge_app/
 
 # 7. 개발 워크플로우
 ## 브랜치 전략 (Branch Strategy)
+- main branch
+  - 운영 환경 배포가 가능한 가장 안정적인 상태의 코드 유지
+  - 개발 작업은 기능 브랜치에서 시작하고, 테스트가 완료된 후 Pull Request(PR)을 통해 main으로 병합(merge)
+- feature Branch (새로운 기능 추가 및 개발)
+  - feature/core-expiry-logic : 식재료 및 조리 음식의 유통기한을 자동 계산하는 모듈 개발 브랜치
+  - feature/implement-ingredient-status : DB에 등록된 식재료에 '상태' 필드를 추가하고 관리하는 브랜치
+  - feature/implement-notification : 식재료 알림 기능 구현 브랜치
+  - feature/ocr-llm-post-processing : OCR 추출 텍스트를 LLM으로 정제하여 JSON으로 변환하는 핵심 로직 구현 브랜치
+  - feature/ocr_add_Expiration-date : OCR로 인식된 식재료 정보에 유통기한을 자동으로 추가하는 기능을 구현 브랜치
+  - feature/recipe-recommendation : LLM 기반 레시피 추천 및 필요 재료 분리 기능 구현 브랜치
+  - feature/refactor-backend-structure : 기초 구조 확립, 안정화 브랜치
 
 <br><br><br>
-# 8. 설치 패키지 다운로드 주소
+
