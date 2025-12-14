@@ -185,30 +185,144 @@ def refine_batch_items(lines: list):
         print(f"Error in refine_batch_items: {e}")
         return []
     
+def infer_storage_locations(items: list):
+    """
+    [수정됨] Phase 2: 보관 위치 추론
+    - Few-Shot 예시 추가 (LLM이 뭘 해야 하는지 명확히 지시)
+    - 파싱 로직 강화 (마크다운 코드블록 제거)
+    - 실패 시 안전장치 강화 (기본값 강제 주입)
+    """
+    if not items: return []
+
+    print(f"DEBUG: Inferring storage for {len(items)} items...")
+
+    # LLM에게 보낼 깔끔한 데이터 준비
+    input_json_str = json.dumps(items, ensure_ascii=False, indent=2)
+
+    # [프롬프트 강화] 예시(Few-Shot)를 추가하여 'storage_location' 필드 추가를 강제함
+    system_prompt = """
+    You are a food storage expert.
+    
+    [Task]
+    Review the provided JSON list.
+    You MUST output the EXACT SAME list, but add a "storage_location" field to EVERY item.
+    
+    [Rules]
+    1. Keep "product_name", "quantity", "unit", "category" UNCHANGED.
+    2. Add "storage_location": Choose one from ['실온', '냉장', '냉동'].
+       - 냉동 (Frozen): Ice cream, frozen dumplings, frozen meat.
+       - 냉장 (Fridge): Fresh meat, fish, tofu, milk, eggs, fresh vegetables, kimchi.
+       - 실온 (Room Temp): Ramen, canned food, snacks, bread, sauces, root vegetables (onion/potato).
+    
+    [Example]
+    Input:
+    [
+      {"product_name": "두부", "quantity": 1, "unit": "개", "category": "유제품"},
+      {"product_name": "과자", "quantity": 1, "unit": "개", "category": "기타"}
+    ]
+    
+    Output:
+    [
+      {"product_name": "두부", "quantity": 1, "unit": "개", "category": "유제품", "storage_location": "냉장"},
+      {"product_name": "과자", "quantity": 1, "unit": "개", "category": "기타", "storage_location": "실온"}
+    ]
+    
+    [Action]
+    Convert the user input following the example above. Return ONLY the JSON List.
+    """.strip()
+
+    try:
+        response = ollama.chat(
+            model='deepseek-r1:8b', 
+            messages=[
+                {'role': 'system', 'content': system_prompt},
+                {'role': 'user', 'content': input_json_str}
+            ],
+            format='json',
+            options={'temperature': 0.1}
+        )
+        
+        content = response['message']['content']
+        # print(f"[Debug Phase 2 Raw Output]: {content[:100]}...") # 디버깅용
+
+        # [파싱 로직 강화]
+        # 1. 마크다운 코드 블록 제거 (```json ... ```)
+        if "```" in content:
+            content = content.replace("```json", "").replace("```", "")
+        
+        # 2. <think> 태그 제거 (DeepSeek R1 계열 특성 대응)
+        content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL).strip()
+
+        # 3. JSON 추출
+        match = re.search(r'\[.*\]', content, re.DOTALL)
+        if match:
+            enhanced_items = json.loads(match.group(0))
+            
+            # [검증] LLM이 진짜로 필드를 추가했는지 확인
+            if enhanced_items and "storage_location" not in enhanced_items[0]:
+                raise ValueError("LLM returned JSON but missed 'storage_location' field.")
+                
+            return enhanced_items
+        else:
+            raise ValueError("No JSON list found in response.")
+
+    except Exception as e:
+        print(f"Phase 2 Error or Parsing Failed: {e}")
+        print("Applying Fallback: Adding default '실온'/'냉장' based on category rules (simple logic).")
+        
+        # [최후의 보루] 파이썬 로직으로 강제 주입
+        # LLM이 실패해도 API 응답에는 반드시 필드가 있어야 함
+        for item in items:
+            # 이미 있으면 패스
+            if 'storage_location' in item: continue
+            
+            # 간단한 규칙 기반 폴백
+            cat = item.get('category', '')
+            name = item.get('product_name', '')
+            
+            if cat in ['육류', '수산물', '유제품/두부/알류', '채소', '과일']:
+                item['storage_location'] = '냉장'
+            elif cat in ['가공/냉동식품'] or '아이스' in name or '냉동' in name:
+                item['storage_location'] = '냉동'
+            else:
+                item['storage_location'] = '실온'
+                
+        return items
+
 def refine_ingredients_with_llm(ocr_data_list):
-    """
-    """
     if not ocr_data_list: return []
 
     if isinstance(ocr_data_list, dict) and 'lines' in ocr_data_list:
         ocr_data_list = ocr_data_list['lines']
-    # 1. Regex 기반 1차 쓰레기 제거 (필수)
+        
+    # 0. 쓰레기 데이터 1차 필터링
     clean_candidates = [item for item in ocr_data_list if not is_garbage_text(item)]
-
-    CHUNK_SIZE = 20
-    final_items = []
     
-    print(f"Processing {len(clean_candidates)} items (Filtered from {len(ocr_data_list)})...")
-    # 2. 배치 처리
+    final_items = []
+    CHUNK_SIZE = 20
+    
+    # 1. 배치 처리 (Phase 1: 추출)
+    extracted_batches = []
+    print(f"Processing Phase 1 (Extraction) for {len(clean_candidates)} lines...")
+    
     for i in range(0, len(clean_candidates), CHUNK_SIZE):
         chunk = clean_candidates[i:i + CHUNK_SIZE]
         if not chunk: continue
         
-        items = refine_batch_items(chunk)
-        
-        if items:
-            final_items.extend(items)
+        batch_result = refine_batch_items(chunk) # OCR -> JSON
+        if batch_result:
+            extracted_batches.extend(batch_result)
             
+    # 2. 전체 결과에 대해 한 번에 (혹은 배치로) 보관 위치 추론 (Phase 2)
+    # 아이템 개수가 많지 않다면 한 번에 보내는 게 문맥 파악에 유리합니다.
+    # 만약 50개가 넘어가면 이것도 쪼개야 하지만, 영수증 1장은 보통 한 번에 가능합니다.
+    
+    if extracted_batches:
+        print(f"Processing Phase 2 (Storage Inference) for {len(extracted_batches)} items...")
+        final_items = infer_storage_locations(extracted_batches)
+    else:
+        final_items = []
+    print(final_items)
     return final_items
 
 # 레시피 추천용 LLM 함수

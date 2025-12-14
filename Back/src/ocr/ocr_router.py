@@ -3,6 +3,7 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from ..ocr.OCR_processor import AdvancedOCRProcessor # 기존 OCR 함수
 from ..llm.llm_processor import refine_ingredients_with_llm # <--- [핵심] LLM 처리기 가져오기
+from ..ingredients.expiry_calculator import calculate_expiry_date # 유통기한 계산
 import shutil
 import os
 import uuid
@@ -17,7 +18,31 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 # 전역 변수로 관리하여 매 요청마다 모델을 다시 로드하지 않게 합니다.
 ocr_processor = AdvancedOCRProcessor(use_gpu=True) 
 
-@router.post("/receipt", summary="영수증 이미지 OCR")
+# LLM 결과로 받은 리스트에서 유통기한을 일괄 적용하는 함수.
+def apply_expiry_dates_to_batch(items: list) -> list:
+    """
+    LLM이 만든 리스트(items)를 받아, 각 항목에 'expiry_date' 키를 추가합니다.
+    """
+    print(f"[Server] Calculating expiry dates for {len(items)} items...")
+    
+    for item in items:
+        # 1. 필요한 정보 가져오기 (없으면 기본값)
+        category = item.get("category", "기타")
+        storage = item.get("storage_location", "실온")
+        
+        # 2. DB 매핑 정보를 통해 유통기한 날짜 계산 (예: '2025-12-25')
+        expiry_date = calculate_expiry_date(
+            category_tag=category,
+            storage_location=storage,
+            manual_days=None
+        )
+        
+        # 3. [중요] 딕셔너리에 'expiry_date' 필드 추가 (Update)
+        item['expiry_date'] = expiry_date
+        
+    return items
+
+@router.post("/receipt", summary="영수증 이미지 OCR 및 유통기한 자동 계산")
 async def analyze_receipt(file: UploadFile = File(...)):
     # [디버깅용 로그 추가] 앱에서 뭘 보냈는지 확인!
     print(f"====== [DEBUG] 파일 수신 정보 ======")
@@ -65,10 +90,11 @@ async def analyze_receipt(file: UploadFile = File(...)):
         
         print(f"[Server] LLM 보정 완료. {len(refined_data)}개 식재료 추출됨.")
         # ---------------------------------------------------------
-
+        
+        final_data_with_expiry = apply_expiry_dates_to_batch(refined_data)
         # 4. 최종 결과 반환
         return {
-            "data": refined_data        # [핵심] LLM이 정제한 최종 식재료 JSON 리스트
+            "data": final_data_with_expiry        # [핵심] LLM이 정제한 최종 식재료 JSON 리스트
         }
 
     except Exception as e:

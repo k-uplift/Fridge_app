@@ -4,61 +4,81 @@
             "product_name": "우유",
             "quantity": 1.0,
             "unit": "개",
-            "category": "유제품/두부/알류"
+            "category": "유제품/두부/알류",
+            "storage_location": "냉장",
+            "expiry_date": "2025-12-17"
         },
         {
             "product_name": "파스타",
             "quantity": 1.0,
             "unit": "g",
-            "category": "면/빵/떡"
+            "category": "면/빵/떡",
+            "storage_location": "실온",
+            "expiry_date": "2025-12-17"
         },
         {
             "product_name": "산딸기",
             "quantity": 1.0,
             "unit": "개",
-            "category": "과일"
+            "category": "과일",
+            "storage_location": "냉장",
+            "expiry_date": "2025-12-19"
         },
         {
             "product_name": "오이스터",
             "quantity": 1.0,
             "unit": "개",
-            "category": "수산물"
+            "category": "수산물",
+            "storage_location": "냉장",
+            "expiry_date": "2025-12-17"
         },
         {
             "product_name": "콤비네이션",
             "quantity": 1.0,
             "unit": "개",
-            "category": "기타"
+            "category": "기타",
+            "storage_location": "실온",
+            "expiry_date": "2025-12-17"
         },
         {
             "product_name": "꼬깔콘",
             "quantity": 1.0,
             "unit": "g",
-            "category": "면/빵/떡"
+            "category": "면/빵/떡",
+            "storage_location": "실온",
+            "expiry_date": "2025-12-17"
         },
         {
             "product_name": "계란",
             "quantity": 1.0,
             "unit": "개",
-            "category": "유제품/두부/알류"
+            "category": "유제품/두부/알류",
+            "storage_location": "냉장",
+            "expiry_date": "2025-12-17"
         },
         {
             "product_name": "허브맛솔트",
             "quantity": 1.0,
             "unit": "개",
-            "category": "양념/오일"
+            "category": "양념/오일",
+            "storage_location": "실온",
+            "expiry_date": "2025-12-17"
         },
         {
             "product_name": "아스파라거",
             "quantity": 1.0,
             "unit": "개",
-            "category": "채소"
+            "category": "채소",
+            "storage_location": "냉장",
+            "expiry_date": "2025-12-21"
         },
         {
             "product_name": "수박",
             "quantity": 2.0,
             "unit": "개",
-            "category": "과일"
+            "category": "과일",
+            "storage_location": "냉장",
+            "expiry_date": "2025-12-19"
         }
     ]
 }
