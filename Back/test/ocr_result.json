@@ -1,171 +1,64 @@
 {
-    "status": "success",
-    "line_count": 33,
-    "lines": [
+    "data": [
         {
-            "index": 1,
-            "text": "명 수 √√√",
-            "avg_confidence": 0.5303682088851929
+            "product_name": "우유",
+            "quantity": 1.0,
+            "unit": "개",
+            "category": "유제품/두부/알류"
         },
         {
-            "index": 2,
-            "text": "그랜든마트",
-            "avg_confidence": 0.800707221031189
+            "product_name": "파스타",
+            "quantity": 1.0,
+            "unit": "g",
+            "category": "면/빵/떡"
         },
         {
-            "index": 3,
-            "text": "사업자번호:210-01-74483",
-            "avg_confidence": 0.9976119995117188
+            "product_name": "산딸기",
+            "quantity": 1.0,
+            "unit": "개",
+            "category": "과일"
         },
         {
-            "index": 4,
-            "text": "주소:서울시 은맹구 신사동 29-1",
-            "avg_confidence": 0.9162157773971558
+            "product_name": "오이스터",
+            "quantity": 1.0,
+            "unit": "개",
+            "category": "수산물"
         },
         {
-            "index": 5,
-            "text": "대표:심용석 전화번호:02.309.3722",
-            "avg_confidence": 0.9834076166152954
+            "product_name": "콤비네이션",
+            "quantity": 1.0,
+            "unit": "개",
+            "category": "기타"
         },
         {
-            "index": 6,
-            "text": "Pos:1 계산원:서인미",
-            "avg_confidence": 0.9911839962005615
+            "product_name": "꼬깔콘",
+            "quantity": 1.0,
+            "unit": "g",
+            "category": "면/빵/떡"
         },
         {
-            "index": 7,
-            "text": "품명 단가 수량 금액",
-            "avg_confidence": 0.9829241037368774
+            "product_name": "계란",
+            "quantity": 1.0,
+            "unit": "개",
+            "category": "유제품/두부/알류"
         },
         {
-            "index": 8,
-            "text": "001참이슬1.81",
-            "avg_confidence": 0.9930256009101868
+            "product_name": "허브맛솔트",
+            "quantity": 1.0,
+            "unit": "개",
+            "category": "양념/오일"
         },
         {
-            "index": 9,
-            "text": "8801048943302 4,300 1 4,300",
-            "avg_confidence": 0.9981846511363983
+            "product_name": "아스파라거",
+            "quantity": 1.0,
+            "unit": "개",
+            "category": "채소"
         },
         {
-            "index": 10,
-            "text": "002 서을장수막걸리",
-            "avg_confidence": 0.9320209622383118
-        },
-        {
-            "index": 11,
-            "text": "8809065665108 1,100 5 5,500",
-            "avg_confidence": 0.9980379790067673
-        },
-        {
-            "index": 12,
-            "text": "003펩시넥스1.25L",
-            "avg_confidence": 0.9804421067237854
-        },
-        {
-            "index": 13,
-            "text": "8801056032388 1,300 1 1,300",
-            "avg_confidence": 0.9943737983703613
-        },
-        {
-            "index": 14,
-            "text": "004 양파(중)",
-            "avg_confidence": 0.9475600123405457
-        },
-        {
-            "index": 15,
-            "text": "*201178 2,000 1 2,000",
-            "avg_confidence": 0.9992898404598236
-        },
-        {
-            "index": 16,
-            "text": "005 새우깡노래방",
-            "avg_confidence": 0.9575401544570923
-        },
-        {
-            "index": 17,
-            "text": "8801043001403 2,560 1 2,560",
-            "avg_confidence": 0.997526615858078
-        },
-        {
-            "index": 18,
-            "text": "006청과류",
-            "avg_confidence": 0.973559558391571
-        },
-        {
-            "index": 19,
-            "text": "*202001 1,540 1 1,540",
-            "avg_confidence": 0.9976545721292496
-        },
-        {
-            "index": 20,
-            "text": "007포카칩오리지널",
-            "avg_confidence": 0.9695793390274048
-        },
-        {
-            "index": 21,
-            "text": "8801117739409 960 7 960",
-            "avg_confidence": 0.9397802650928497
-        },
-        {
-            "index": 22,
-            "text": "008 상추",
-            "avg_confidence": 0.9705235362052917
-        },
-        {
-            "index": 23,
-            "text": "*201027 1,040 1 1,040",
-            "avg_confidence": 0.9971695095300674
-        },
-        {
-            "index": 24,
-            "text": "009풀/소가부침두부",
-            "avg_confidence": 0.9817953109741211
-        },
-        {
-            "index": 25,
-            "text": "8801114110287 1,350 2 2,700",
-            "avg_confidence": 0.9979757517576218
-        },
-        {
-            "index": 26,
-            "text": "면세합: 4,580",
-            "avg_confidence": 0.9945565760135651
-        },
-        {
-            "index": 27,
-            "text": "과세합: 15,745",
-            "avg_confidence": 0.9976971447467804
-        },
-        {
-            "index": 28,
-            "text": "부가세: 1,575",
-            "avg_confidence": 0.9972424507141113
-        },
-        {
-            "index": 29,
-            "text": "계: 21,900",
-            "avg_confidence": 0.9548623859882355
-        },
-        {
-            "index": 30,
-            "text": " o",
-            "avg_confidence": 0.4605729579925537
-        },
-        {
-            "index": 31,
-            "text": "",
-            "avg_confidence": 0.0
-        },
-        {
-            "index": 32,
-            "text": "21,900",
-            "avg_confidence": 0.9358091950416565
-        },
-        {
-            "index": 33,
-            "text": "httpaidan",
-            "avg_confidence": 0.7096974849700928
+            "product_name": "수박",
+            "quantity": 2.0,
+            "unit": "개",
+            "category": "과일"
         }
     ]
 }

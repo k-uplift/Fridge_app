@@ -122,7 +122,7 @@ def refine_batch_items(lines: list):
             model='deepseek-r1:8b', 
             messages=[
                 {'role': 'system', 'content': system_prompt},
-                user_message  # 수정된 메시지 객체 사용
+                user_message  
             ],
             format='json',
             options={
@@ -204,7 +204,6 @@ def refine_ingredients_with_llm(ocr_data_list):
         chunk = clean_candidates[i:i + CHUNK_SIZE]
         if not chunk: continue
         
-        # [핵심 수정] 여기서 image_path를 refine_batch_items에 전달해야 함!
         items = refine_batch_items(chunk)
         
         if items:
