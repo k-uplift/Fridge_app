@@ -193,8 +193,11 @@ Fridge_app/
 
 "프레시 킵" 실행을 위해 다음 도구들을 선행 설치
 
+* **Flutter SDK:** Flutter SDK 다운 후 시스템 환경 변수에 등록 필요 ([https://www.python.org/downloads/](https://docs.flutter.dev/get-started))
+* **Dart SDK:** 보통 Flutter SDK를  설치할 때 포함 ([https://www.python.org/downloads/](https://dart.dev/get-dart))
 * **Python:** 3.9 이상 버전 (https://www.python.org/downloads/)
 * **Ollama 서버:** LLM 구동을 위한 서버 (https://ollama.com/download)
+
 
 ### 2. LLM 모델 다운로드
 
