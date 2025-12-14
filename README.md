@@ -134,7 +134,8 @@
 - AI/LM:
   - OCR : PaddleOCR
   - LLM Runtime : Ollama
-  - LLM Model: deepseek-r1:8b
+  - LLM Model: deepseek-r1:8b(ocr 데이터 정제)
+  - LLM Model: exaone3.5:7.8b(레시피 생성)
   - Image Processin: OpenCV(cv2) 및 Numpy
 ## 5.3 Frontend
 - Framework: Flutter
